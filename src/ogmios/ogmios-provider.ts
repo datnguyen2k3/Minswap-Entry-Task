@@ -246,16 +246,6 @@ export class OgmiosProvider implements Provider {
                 rewards: BigInt(0),
             }
         }
-
-        console.log(rewardAccountSummaries);
-
-
-        // type Delegation = {
-        //     poolId: PoolId | null; //type PoolId = string;
-        //     rewards: Lovelace; // type Lovelace = bigint;
-        // };
-        //
-        // type RewardAddress = string;
         throw new Error("Method not implemented.");
     }
 
