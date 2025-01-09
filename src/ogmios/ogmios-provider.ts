@@ -64,7 +64,6 @@ export class OgmiosProvider implements Provider {
     toProtocolParameters = (
         result: Schema.ProtocolParameters,
     ): ProtocolParameters => {
-        console.log(result);
         if (!result.maxTransactionSize) {
             throw Error("maxTransactionSize not found");
         }
