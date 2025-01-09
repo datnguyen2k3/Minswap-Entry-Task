@@ -19,11 +19,12 @@ import {
     UTxO
 } from "@lucid-evolution/lucid";
 import * as Ogmios from "@cardano-ogmios/client";
-import {Lovelace, PoolId} from "@lucid-evolution/core-types";
+import {TransactionSubmissionClient} from "@cardano-ogmios/client/dist/TransactionSubmission";
 
 export class OgmiosProvider implements Provider {
     context: InteractionContext;
     ledgerStateClient: LedgerStateQueryClient | undefined;
+    transactionSubmissionClient: TransactionSubmissionClient | undefined;
 
     constructor(context: InteractionContext) {
         this.context = context;
@@ -37,6 +38,15 @@ export class OgmiosProvider implements Provider {
         const ledgerStateClient = await Ogmios.createLedgerStateQueryClient(this.context);
         this.ledgerStateClient = ledgerStateClient;
         return this.ledgerStateClient;
+    }
+
+    async getTransactionSubmissionClient(): Promise<TransactionSubmissionClient> {
+        if (this.transactionSubmissionClient) {
+            return this.transactionSubmissionClient;
+        }
+        const transactionSubmissionClient = await Ogmios.createTransactionSubmissionClient(this.context);
+        this.transactionSubmissionClient = transactionSubmissionClient;
+        return this.transactionSubmissionClient;
     }
 
     toProtocolParameters = (
@@ -189,7 +199,6 @@ export class OgmiosProvider implements Provider {
             return undefined;
         }
 
-
         console.log(rewardAccountSummaries);
 
 
@@ -210,8 +219,12 @@ export class OgmiosProvider implements Provider {
         throw new Error("Method not implemented.");
     }
 
-    submitTx(tx: Transaction): Promise<TxHash> {
-        throw new Error("Method not implemented.");
+    async submitTx(tx: Transaction): Promise<TxHash> {
+        console.log(tx);
+        const client = await this.getTransactionSubmissionClient();
+        const txHash = await client.submitTransaction(tx);
+
+        return txHash;
     }
 
     evaluateTx(tx: Transaction, additionalUTxOs?: UTxO[]): Promise<EvalRedeemer[]> {
