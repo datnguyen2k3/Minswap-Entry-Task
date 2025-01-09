@@ -146,13 +146,13 @@ export class OgmiosProvider implements Provider {
             "lovelace": BigInt(value.ada.lovelace)
         };
 
-        for (const key in value) {
-            if (key !== 'ada') {
-                const assetsQuantities = value[key];
-                for (const assetKey in assetsQuantities) {
-                    const assetQuantity = assetsQuantities[assetKey];
-                    const resultKey = key + assetKey;
-                    resultAssets[resultKey] = BigInt(assetQuantity);
+        for (const policyID in value) {
+            if (policyID !== 'ada') {
+                const assetAmounts = value[policyID];
+                for (const assetName in assetAmounts) {
+                    const amount = assetAmounts[assetName];
+                    const assetId = policyID + assetName;
+                    resultAssets[assetId] = BigInt(amount);
                 }
             }
         }
@@ -167,8 +167,10 @@ export class OgmiosProvider implements Provider {
                 return "PlutusV2";
             case "plutus:v3":
                 return "PlutusV3";
-            default:
+            case "native":
                 return "Native";
+            default:
+                throw new Error("Scripts Type is not support")
         }
     }
 
@@ -221,7 +223,7 @@ export class OgmiosProvider implements Provider {
             const lucidUtxos = this.toUtxos(utxos);
             return lucidUtxos;
         } else {
-            throw Error("Not Support");
+            throw new Error("Method not implemented.");
         }
     }
 
