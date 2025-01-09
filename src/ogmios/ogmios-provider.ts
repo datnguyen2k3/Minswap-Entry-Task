@@ -21,9 +21,6 @@ import {
 import * as Ogmios from "@cardano-ogmios/client";
 import {TransactionSubmissionClient} from "@cardano-ogmios/client/dist/TransactionSubmission";
 import {parseFraction} from "../ultis/math_ultis";
-import {PLUTUS_V1_ATTRIBUTES} from "./plutus/plutus-v1-attributes";
-import {PLUTUS_V2_ATTRIBUTES} from "./plutus/plutus-v2-attributes";
-import {PLUTUS_V3_ATTRIBUTES} from "./plutus/plutus-v3-attributes";
 
 export class OgmiosProvider implements Provider {
     context: InteractionContext;
@@ -121,19 +118,19 @@ export class OgmiosProvider implements Provider {
             costModels: {
                 PlutusV1: Object.fromEntries(
                     result.plutusCostModels["plutus:v1"].map((value, index) => [
-                        PLUTUS_V1_ATTRIBUTES[index],
+                        String(index),
                         value,
                     ]),
                 ),
                 PlutusV2: Object.fromEntries(
                     result.plutusCostModels["plutus:v2"].map((value, index) => [
-                        PLUTUS_V2_ATTRIBUTES[index],
+                        String(index),
                         value,
                     ]),
                 ),
                 PlutusV3: Object.fromEntries(
                     result.plutusCostModels["plutus:v3"].map((value, index) => [
-                        PLUTUS_V3_ATTRIBUTES[index],
+                        String(index),
                         value,
                     ]),
                 ),

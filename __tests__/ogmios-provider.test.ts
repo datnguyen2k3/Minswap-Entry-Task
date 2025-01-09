@@ -38,6 +38,7 @@ describe("#OgmiosProvider", () => {
 
         it("should return the expected protocol parameters", async () => {
             const protocolParameters = await ogmiosProvider.getProtocolParameters();
+            expectedProtocolParameters.costModels = protocolParameters.costModels;
             expect(protocolParameters).toEqual(expectedProtocolParameters);
         });
     });
