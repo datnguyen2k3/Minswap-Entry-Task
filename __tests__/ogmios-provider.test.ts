@@ -1,6 +1,6 @@
 import {OgmiosProvider} from "../src/ogmios/ogmios-provider";
 import * as Ogmios from "@cardano-ogmios/client";
-import {Blockfrost} from "@lucid-evolution/lucid";
+import {Blockfrost, UTxO} from "@lucid-evolution/lucid";
 import {ProtocolParameters} from "@lucid-evolution/lucid";
 
 describe("#OgmiosProvider", () => {
@@ -41,5 +41,29 @@ describe("#OgmiosProvider", () => {
             expect(protocolParameters).toEqual(expectedProtocolParameters);
         });
     });
+
+    describe("#getUtxos", () => {
+        describe("with input is address", () => {
+            let address: string = "addr_test1vrghqljgzecagulwt2x4vx42cjslf6xfxl8xrew3rlqxz8crj5as6";
+            let expectedUtxos: UTxO[];
+
+            beforeEach(async () => {
+                expectedUtxos = await blockfrostProvider.getUtxos(address);
+            });
+
+            it("should return the expected utxos", async () => {
+                const utxos = await ogmiosProvider.getUtxos(address);
+                utxos.sort((a, b) =>
+                    a.txHash.localeCompare(b.txHash) || a.outputIndex - b.outputIndex
+                );
+                expectedUtxos.sort((a, b) =>
+                    a.txHash.localeCompare(b.txHash) || a.outputIndex - b.outputIndex
+                );
+
+                expect(utxos).toEqual(expectedUtxos);
+            });
+        });
+    });
+
 
 });

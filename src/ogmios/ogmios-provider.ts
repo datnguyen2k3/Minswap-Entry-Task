@@ -7,7 +7,7 @@ import {
     Datum,
     DatumHash,
     Delegation,
-    EvalRedeemer,
+    EvalRedeemer, Native,
     OutRef,
     ProtocolParameters,
     Provider,
@@ -142,34 +142,67 @@ export class OgmiosProvider implements Provider {
     };
 
     toAsset(value: Schema.Value): Assets {
-        if (value.ada) {
-            return {
-                lovelace: BigInt(value.ada.lovelace),
+        const resultAssets: Assets = {
+            "lovelace": BigInt(value.ada.lovelace)
+        };
+
+        for (const key in value) {
+            if (key !== 'ada') {
+                const assetsQuantities = value[key];
+                for (const assetKey in assetsQuantities) {
+                    const assetQuantity = assetsQuantities[assetKey];
+                    const resultKey = key + assetKey;
+                    resultAssets[resultKey] = BigInt(assetQuantity);
+                }
             }
         }
-        throw new Error("Method not implemented.");
+        return resultAssets;
+    }
+
+    toScriptType(scriptType: "plutus:v1" | "plutus:v2" | "plutus:v3" | "native"): any {
+        switch (scriptType) {
+            case "plutus:v1":
+                return "PlutusV1";
+            case "plutus:v2":
+                return "PlutusV2";
+            case "plutus:v3":
+                return "PlutusV3";
+            default:
+                return "Native";
+        }
     }
 
     toScript(script?: Schema.Script): Script | undefined {
         if (!script) {
             return undefined;
         }
-        throw new Error("Method not implemented.");
+
+        if (!script?.cbor) {
+            throw Error("Utxo script cbor not found");
+        }
+
+        return {
+            type: this.toScriptType(script?.language),
+            script: script?.cbor
+        }
+    }
+
+    toUtxo(utxo: any): UTxO {
+        return {
+            txHash: utxo.transaction.id,
+            outputIndex: utxo.index,
+            address: utxo.address,
+            assets: this.toAsset(utxo.value),
+            datumHash: utxo.datumHash,
+            datum: utxo.datum,
+            scriptRef: this.toScript(utxo.script),
+        };
     }
 
     toUtxos(utxos: Schema.Utxo): UTxO[] {
         const result: UTxO[] = [];
         for (const utxo of utxos) {
-            const lucidUtxo: UTxO = {
-                txHash: utxo.transaction.id,
-                outputIndex: utxo.index,
-                address: utxo.address,
-                assets: this.toAsset(utxo.value),
-                datumHash: utxo.datumHash,
-                datum: utxo.datum,
-                scriptRef: this.toScript(utxo.script),
-            };
-            result.push(lucidUtxo);
+            result.push(this.toUtxo(utxo));
         }
         return result;
     }
