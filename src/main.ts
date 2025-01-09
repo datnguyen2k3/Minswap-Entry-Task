@@ -1,6 +1,6 @@
 import {Lucid, Blockfrost, generateSeedPhrase} from "@lucid-evolution/lucid";
 import * as Ogmios from "@cardano-ogmios/client";
-import {OgmiosProvider} from "./ogmios-provider";
+import {OgmiosProvider} from "./ogmios/ogmios-provider";
 
 const main = async () => {
     const context = await Ogmios.createInteractionContext(
@@ -19,9 +19,6 @@ const main = async () => {
             }
         }
     );
-    // const ledgerStateClient = await Ogmios.createLedgerStateQueryClient(context);
-    // const a = await ledgerStateClient.networkTip()
-    // console.log(a);
 
     const provider = new OgmiosProvider(context);
     const lucid = await Lucid(provider, "Preprod");

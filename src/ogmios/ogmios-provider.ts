@@ -20,6 +20,10 @@ import {
 } from "@lucid-evolution/lucid";
 import * as Ogmios from "@cardano-ogmios/client";
 import {TransactionSubmissionClient} from "@cardano-ogmios/client/dist/TransactionSubmission";
+import {parseFraction} from "../ultis/math_ultis";
+import {PLUTUS_V1_ATTRIBUTES} from "./plutus/plutus-v1-attributes";
+import {PLUTUS_V2_ATTRIBUTES} from "./plutus/plutus-v2-attributes";
+import {PLUTUS_V3_ATTRIBUTES} from "./plutus/plutus-v3-attributes";
 
 export class OgmiosProvider implements Provider {
     context: InteractionContext;
@@ -49,9 +53,18 @@ export class OgmiosProvider implements Provider {
         return this.transactionSubmissionClient;
     }
 
+    toPriceMemory(ration: string): number {
+        return parseFraction(ration);
+    }
+
+    toPriceStep(ration: string): number {
+        return parseFraction(ration);
+    }
+
     toProtocolParameters = (
         result: Schema.ProtocolParameters,
     ): ProtocolParameters => {
+        console.log(result);
         if (!result.maxTransactionSize) {
             throw Error("maxTransactionSize not found");
         }
@@ -80,6 +93,10 @@ export class OgmiosProvider implements Provider {
             throw Error("plutusCostModels not found");
         }
 
+        if (!result.scriptExecutionPrices) {
+            throw Error("scriptExecutionPrices not found");
+        }
+
         return {
             minFeeA: result.minFeeCoefficient,
             minFeeB: Number(result.minFeeConstant.ada.lovelace),
@@ -89,11 +106,8 @@ export class OgmiosProvider implements Provider {
             poolDeposit: BigInt(result.stakePoolDeposit.ada.lovelace),
             drepDeposit: BigInt(result.delegateRepresentativeDeposit.ada.lovelace),
             govActionDeposit: BigInt(result.governanceActionDeposit.ada.lovelace),
-            priceMem: 0, // TODO: FIX ME!
-            // result.scriptExecutionPrices.memory[0] /
-            // result.scriptExecutionPrices.memory[1],
-            priceStep: 0, // TODO: FIX ME!
-            // result.scriptExecutionPrices.cpu[0] / result.scriptExecutionPrices.cpu[1],
+            priceMem: this.toPriceMemory(result.scriptExecutionPrices.memory),
+            priceStep: this.toPriceStep(result.scriptExecutionPrices.cpu),
             maxTxExMem: BigInt(result.maxExecutionUnitsPerTransaction.memory),
             maxTxExSteps: BigInt(result.maxExecutionUnitsPerTransaction.cpu),
             // NOTE: coinsPerUtxoByte is now called utxoCostPerByte:
@@ -108,19 +122,19 @@ export class OgmiosProvider implements Provider {
             costModels: {
                 PlutusV1: Object.fromEntries(
                     result.plutusCostModels["plutus:v1"].map((value, index) => [
-                        index.toString(),
+                        PLUTUS_V1_ATTRIBUTES[index],
                         value,
                     ]),
                 ),
                 PlutusV2: Object.fromEntries(
                     result.plutusCostModels["plutus:v2"].map((value, index) => [
-                        index.toString(),
+                        PLUTUS_V2_ATTRIBUTES[index],
                         value,
                     ]),
                 ),
                 PlutusV3: Object.fromEntries(
                     result.plutusCostModels["plutus:v3"].map((value, index) => [
-                        index.toString(),
+                        PLUTUS_V3_ATTRIBUTES[index],
                         value,
                     ]),
                 ),
@@ -194,9 +208,12 @@ export class OgmiosProvider implements Provider {
     async getDelegation(rewardAddress: RewardAddress): Promise<Delegation> {
         const client = await this.getLedgerStateClient();
         const rewardAccountSummaries = await client.rewardAccountSummaries({keys: [rewardAddress]});
-        const rewardAccountSummary = rewardAccountSummaries[rewardAddress];
+        const rewardAccountSummary = rewardAccountSummaries[0];
         if (!rewardAccountSummary) {
-            return undefined;
+            return {
+                poolId: null,
+                rewards: BigInt(0),
+            }
         }
 
         console.log(rewardAccountSummaries);
@@ -220,10 +237,8 @@ export class OgmiosProvider implements Provider {
     }
 
     async submitTx(tx: Transaction): Promise<TxHash> {
-        console.log(tx);
         const client = await this.getTransactionSubmissionClient();
         const txHash = await client.submitTransaction(tx);
-
         return txHash;
     }
 
