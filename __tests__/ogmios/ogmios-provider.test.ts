@@ -52,7 +52,7 @@ describe("#OgmiosProvider", () => {
 
     describe("#getUtxos", () => {
         describe("with input is address", () => {
-            let address: string = "addr_test1vrghqljgzecagulwt2x4vx42cjslf6xfxl8xrew3rlqxz8crj5as6";
+            let address: string = "addr_test1vqe33tv0p36r5e6gx8tfunrpcrvqtmdxjkc0yzj07rk7h3gp7wqvu";
             let expectedUtxos: UTxO[];
 
             beforeEach(async () => {
@@ -69,7 +69,7 @@ describe("#OgmiosProvider", () => {
     });
 
     describe("#getUtxosByOutRef", () => {
-        let txHash: string = "070cbfc3d1139d09de80568126eacf4230b3b373be68042e08045905601aa163";
+        let txHash: string = "9d0758b091773267185c44255d4589728eff584491c97f8560f343ea32d05509";
         let outputIndex: number = 0;
         let outRef: OutRef = {
             txHash: txHash,
@@ -92,10 +92,10 @@ describe("#OgmiosProvider", () => {
 
     describe("#awaitTx", () => {
         describe("with input is existed txHash", () => {
-            let txHash: string = "070cbfc3d1139d09de80568126eacf4230b3b373be68042e08045905601aa163";
+            let txHash: string = "c79107142bb183e2784501aa809e8b1de22b3c9c6c48b86127e610d46606c310";
 
             it("should return true", async () => {
-                const tx = await ogmiosProvider.awaitTx(txHash);
+                const tx = await ogmiosProvider.awaitTx(txHash, 1000);
                 expect(tx).toEqual(true);
             });
         });
@@ -104,7 +104,7 @@ describe("#OgmiosProvider", () => {
             let txHash: string = "070cbfc3d1139d09de80568126eacf4230b3b373be68042e08045905601aa164";
 
             it("should return false", async () => {
-                const tx = await ogmiosProvider.awaitTx(txHash);
+                const tx = await ogmiosProvider.awaitTx(txHash, 2);
                 expect(tx).toEqual(false);
             });
         });
