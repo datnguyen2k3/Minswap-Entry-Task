@@ -1,3 +1,4 @@
+import * as Ogmios from "@cardano-ogmios/client";
 import {InteractionContext, Schema} from "@cardano-ogmios/client";
 import {LedgerStateQueryClient} from "@cardano-ogmios/client/dist/LedgerStateQuery";
 import {
@@ -7,7 +8,7 @@ import {
     Datum,
     DatumHash,
     Delegation,
-    EvalRedeemer, Native,
+    EvalRedeemer,
     OutRef,
     ProtocolParameters,
     Provider,
@@ -18,7 +19,6 @@ import {
     Unit,
     UTxO
 } from "@lucid-evolution/lucid";
-import * as Ogmios from "@cardano-ogmios/client";
 import {TransactionSubmissionClient} from "@cardano-ogmios/client/dist/TransactionSubmission";
 import {parseFraction} from "../ultis/math_ultis";
 
@@ -36,8 +36,7 @@ export class OgmiosProvider implements Provider {
         if (this.ledgerStateClient) {
             return this.ledgerStateClient;
         }
-        const ledgerStateClient = await Ogmios.createLedgerStateQueryClient(this.context);
-        this.ledgerStateClient = ledgerStateClient;
+        this.ledgerStateClient = await Ogmios.createLedgerStateQueryClient(this.context);
         return this.ledgerStateClient;
     }
 
@@ -45,8 +44,7 @@ export class OgmiosProvider implements Provider {
         if (this.transactionSubmissionClient) {
             return this.transactionSubmissionClient;
         }
-        const transactionSubmissionClient = await Ogmios.createTransactionSubmissionClient(this.context);
-        this.transactionSubmissionClient = transactionSubmissionClient;
+        this.transactionSubmissionClient = await Ogmios.createTransactionSubmissionClient(this.context);
         return this.transactionSubmissionClient;
     }
 
@@ -232,8 +230,30 @@ export class OgmiosProvider implements Provider {
         throw new Error("Method not implemented.");
     }
 
-    getUtxosByOutRef(outRefs: Array<OutRef>): Promise<UTxO[]> {
-        throw new Error("Method not implemented.");
+    toTransactionOutputReference(outRef: OutRef): Schema.TransactionOutputReference {
+        return {
+            transaction: {
+                id: outRef.txHash
+            },
+            index: outRef.outputIndex
+        }
+    }
+
+    toTransactionOutputReferences(outRefs: Array<OutRef>): Schema.TransactionOutputReference[] {
+        return outRefs.map(outRef => this.toTransactionOutputReference(outRef));
+    }
+
+    toUtxoByOutputReferences(outRefs: Array<OutRef>): Schema.UtxoByOutputReferences {
+        return {
+            outputReferences: this.toTransactionOutputReferences(outRefs)
+        };
+    }
+
+    async getUtxosByOutRef(outRefs: Array<OutRef>): Promise<UTxO[]> {
+        const client = await this.getLedgerStateClient();
+        const utxoByOutputReferences = this.toUtxoByOutputReferences(outRefs)
+        const utxos = await client.utxo(utxoByOutputReferences);
+        return this.toUtxos(utxos);
     }
 
     async getDelegation(rewardAddress: RewardAddress): Promise<Delegation> {

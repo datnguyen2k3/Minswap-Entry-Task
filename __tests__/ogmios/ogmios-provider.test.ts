@@ -1,7 +1,8 @@
-import {OgmiosProvider} from "../src/ogmios/ogmios-provider";
+import {OgmiosProvider} from "../../src/ogmios/ogmios-provider";
 import * as Ogmios from "@cardano-ogmios/client";
-import {Blockfrost, UTxO} from "@lucid-evolution/lucid";
+import {Blockfrost, OutRef, UTxO} from "@lucid-evolution/lucid";
 import {ProtocolParameters} from "@lucid-evolution/lucid";
+import {sortUTxO} from "../../src/ultis/math_ultis";
 
 describe("#OgmiosProvider", () => {
     let ogmiosProvider: OgmiosProvider;
@@ -29,6 +30,12 @@ describe("#OgmiosProvider", () => {
         blockfrostProvider = new Blockfrost("https://cardano-preprod.blockfrost.io/api/v0", "preprodAq47SEvsVpbW03U2DkjEBG908A5D7oFx");
     });
 
+    function expectEqualUTxOs(utxos: UTxO[], expectedUtxos: UTxO[]) {
+        sortUTxO(utxos);
+        sortUTxO(expectedUtxos);
+        expect(utxos).toEqual(expectedUtxos);
+    }
+
     describe("#getProtocolParameters", () => {
         let expectedProtocolParameters: ProtocolParameters;
 
@@ -50,19 +57,36 @@ describe("#OgmiosProvider", () => {
 
             beforeEach(async () => {
                 expectedUtxos = await blockfrostProvider.getUtxos(address);
+                console.log(expectedUtxos);
             });
 
             it("should return the expected utxos", async () => {
                 const utxos = await ogmiosProvider.getUtxos(address);
-                utxos.sort((a, b) =>
-                    a.txHash.localeCompare(b.txHash) || a.outputIndex - b.outputIndex
-                );
-                expectedUtxos.sort((a, b) =>
-                    a.txHash.localeCompare(b.txHash) || a.outputIndex - b.outputIndex
-                );
 
-                expect(utxos).toEqual(expectedUtxos);
+                expectEqualUTxOs(utxos, expectedUtxos);
             });
+        });
+    });
+
+    describe("#getUtxosByOutRef", () => {
+        let txHash: string = "c2f63b3c08194669285ececa766ba924b36bc4a6f5c48b9ec70ce5ee74c5a1a7";
+        let outputIndex: number = 0;
+        let outRef: OutRef = {
+            txHash: txHash,
+            outputIndex: outputIndex
+        };
+        let outRefs: Array<OutRef> = [outRef];
+
+        let expectedUtxos: UTxO[];
+
+        beforeEach(async () => {
+            expectedUtxos = await blockfrostProvider.getUtxosByOutRef(outRefs);
+        });
+
+        it("should return the expected utxos", async () => {
+            const utxos = await ogmiosProvider.getUtxosByOutRef(outRefs);
+
+            expectEqualUTxOs(utxos, expectedUtxos);
         });
     });
 });
