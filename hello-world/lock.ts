@@ -44,8 +44,15 @@ async function main(): Promise<void> {
     const txHash = await signedTx.submit();
     console.log("TxHash: ", txHash);
 
-    // await lucid.awaitTx(txHash);
-    // console.log("Transaction confirmed:");
+    console.log("Waiting for transaction to be confirmed...");
+
+    const isSuccess = await lucid.awaitTx(txHash);
+
+    if (isSuccess) {
+        console.log("Transaction confirmed!");
+    } else {
+        console.error("Transaction failed!");
+    }
 }
 
 main();

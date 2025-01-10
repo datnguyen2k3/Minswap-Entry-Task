@@ -273,9 +273,9 @@ export class OgmiosProvider implements Provider {
         throw new Error("Method not implemented.");
     }
 
-    isConfirmed(txHash: TxHash): Promise<boolean> {
-        const utxos = this.getUtxosByOutRef([{txHash: txHash, outputIndex: 1}]);
-        return utxos.then(utxos => utxos.length > 0);
+    async isConfirmed(txHash: TxHash): Promise<boolean> {
+        const utxos = await this.getUtxosByOutRef([{txHash: txHash, outputIndex: 0}]);
+        return utxos.length > 0
     }
 
     awaitTx(txHash: TxHash, checkInterval?: number): Promise<boolean> {
@@ -292,6 +292,7 @@ export class OgmiosProvider implements Provider {
                 const isConfirmed = await this.isConfirmed(txHash);
                 if (isConfirmed) {
                     clearInterval(intervalId);
+                    console.log(await this.getUtxosByOutRef([{txHash: txHash, outputIndex: 0}]));
                     resolve(true);
                 }
                 count++;
