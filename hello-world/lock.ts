@@ -1,33 +1,14 @@
 import {getLucidInstance} from "../src/lucid-instance";
 import fs from "node:fs";
 import {Constr, Data, getAddressDetails, SpendingValidator, validatorToAddress} from "@lucid-evolution/lucid";
+import {getPrivateKey, getPublicKeyHash, getScriptsAddress} from "./common";
 
 async function main(): Promise<void> {
     const lucid = await getLucidInstance();
+    lucid.selectWallet.fromPrivateKey(getPrivateKey());
 
-    const privateKey = fs.readFileSync("me.sk", "utf8");
-    lucid.selectWallet.fromPrivateKey(privateKey);
-
-    const plutusJson = JSON.parse(fs.readFileSync("plutus.json", "utf8"));
-    const compiledCode = plutusJson.validators[0].compiledCode;
-    const plutusVersion = "PlutusV3";
-
-    const spend_val: SpendingValidator = {
-        type: plutusVersion,
-        script: compiledCode, // from plutus.json of the compiled contract code, this is the compiled script in CBOR format
-    };
-
-    const scriptAddress = validatorToAddress("Preprod", spend_val);
-    console.log("Script address:", scriptAddress);
-
-    const publicKeyHash = getAddressDetails(
-        await lucid.wallet().address()
-    ).paymentCredential?.hash;
-
-    if (!publicKeyHash) {
-        throw new Error("Unable to retrieve publicKeyHash from the wallet address");
-    }
-
+    const scriptAddress = getScriptsAddress();
+    const publicKeyHash = await getPublicKeyHash();
     const datum = Data.to(new Constr(0, [publicKeyHash]));
 
     const amount = 1000000;
