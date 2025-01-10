@@ -89,4 +89,24 @@ describe("#OgmiosProvider", () => {
             expectEqualUTxOs(utxos, expectedUtxos);
         });
     });
+
+    describe("#awaitTx", () => {
+        describe("with input is existed txHash", () => {
+            let txHash: string = "070cbfc3d1139d09de80568126eacf4230b3b373be68042e08045905601aa163";
+
+            it("should return true", async () => {
+                const tx = await ogmiosProvider.awaitTx(txHash);
+                expect(tx).toEqual(true);
+            });
+        });
+
+        describe("with input is not existed txHash", () => {
+            let txHash: string = "070cbfc3d1139d09de80568126eacf4230b3b373be68042e08045905601aa164";
+
+            it("should return false", async () => {
+                const tx = await ogmiosProvider.awaitTx(txHash);
+                expect(tx).toEqual(false);
+            });
+        });
+    });
 });
