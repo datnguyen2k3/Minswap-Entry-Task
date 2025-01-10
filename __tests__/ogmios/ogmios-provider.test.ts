@@ -69,7 +69,7 @@ describe("#OgmiosProvider", () => {
     });
 
     describe("#getUtxosByOutRef", () => {
-        let txHash: string = "c2f63b3c08194669285ececa766ba924b36bc4a6f5c48b9ec70ce5ee74c5a1a7";
+        let txHash: string = "070cbfc3d1139d09de80568126eacf4230b3b373be68042e08045905601aa163";
         let outputIndex: number = 0;
         let outRef: OutRef = {
             txHash: txHash,
