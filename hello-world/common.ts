@@ -1,16 +1,28 @@
-import {getAddressDetails, SpendingValidator, validatorToAddress, toPublicKey} from "@lucid-evolution/lucid";
+import {
+    getAddressDetails,
+    SpendingValidator,
+    validatorToAddress,
+    toPublicKey,
+    UTxO,
+    Data,
+    Datum
+} from "@lucid-evolution/lucid";
 import fs from "node:fs";
 import {getLucidInstance} from "../src/lucid-instance";
 
-export function getScriptsAddress(): string {
+export function getSpendingValidator(): SpendingValidator {
     const plutusJson = JSON.parse(fs.readFileSync("plutus.json", "utf8"));
     const compiledCode = plutusJson.validators[0].compiledCode;
     const plutusVersion = "PlutusV3";
 
-    const spend_val: SpendingValidator = {
+    return {
         type: plutusVersion,
-        script: compiledCode, // from plutus.json of the compiled contract code, this is the compiled script in CBOR format
+        script: compiledCode,
     };
+}
+
+export function getScriptsAddress(): string {
+    const spend_val = getSpendingValidator();
 
     const scriptAddress = validatorToAddress("Preprod", spend_val);
     console.log("Script address:", scriptAddress);
@@ -36,4 +48,26 @@ export async function getPublicKeyHash(): Promise<string> {
 
     console.log("Public key hash:", publicKeyHash);
     return publicKeyHash;
+}
+
+export async function getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress: string, publicKeyHash: string): Promise<UTxO[]> {
+    const lucid = await getLucidInstance();
+    const scriptsAddressUtxos = await lucid.utxosAt(scriptAddress);
+
+    const DatumSchema = Data.Object({
+        owner: Data.Bytes(),
+    });
+    type DatumType = Data.Static<typeof DatumSchema>;
+    const DatumType = DatumSchema as unknown as DatumType;
+
+    const ownerUTxO = scriptsAddressUtxos.find((utxo) => {
+        if (utxo.datum) {
+            const datum = Data.from(utxo.datum, DatumType);
+            return datum.owner === publicKeyHash;
+        }
+    });
+
+    console.log("Owner UTxO:", ownerUTxO);
+
+    return ownerUTxO ? [ownerUTxO] : [];
 }
