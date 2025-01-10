@@ -60,14 +60,24 @@ export async function getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress: st
     type DatumType = Data.Static<typeof DatumSchema>;
     const DatumType = DatumSchema as unknown as DatumType;
 
-    const ownerUTxO = scriptsAddressUtxos.find((utxo) => {
+    const ownerUTxOs: UTxO[] = [];
+
+    for (const utxo of scriptsAddressUtxos) {
         if (utxo.datum) {
-            const datum = Data.from(utxo.datum, DatumType);
-            return datum.owner === publicKeyHash;
+            try {
+                const datum = Data.from(utxo.datum, DatumType);
+                if (datum.owner === publicKeyHash) {
+                    ownerUTxOs.push(utxo);
+                }
+            } catch (e) {
+                if (e instanceof Error && e.message === "Could not type cast to object.") {
+                    continue;
+                }
+                console.error("Error parsing datum:", e);
+            }
         }
-    });
+    }
 
-    console.log("Owner UTxO:", ownerUTxO);
-
-    return ownerUTxO ? [ownerUTxO] : [];
+    console.log("Owner UTxO:", ownerUTxOs);
+    return ownerUTxOs;
 }
