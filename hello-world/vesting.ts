@@ -31,5 +31,3 @@ export async function unlockAssetsToVestingScriptsAddress(receiveAddress: string
 async function main(): Promise<void> {
     await lockAssetsToVestingScriptsAddress(BigInt(1000000));
 }
-
-main();

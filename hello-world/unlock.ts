@@ -7,15 +7,7 @@ import {
     getUTxOsFromScriptAddressByPublicKeyHash
 } from "./common";
 import {Constr, Data} from "@lucid-evolution/lucid";
-import {getBlockfrostInstance} from "../src/providers/blockfrost-provider";
-
-function utf8ToHex(str: string): string {
-    const encoder = new TextEncoder();
-    const utf8Bytes = encoder.encode(str);
-    return Array.from(utf8Bytes)
-        .map((byte) => byte.toString(16).padStart(2, "0"))
-        .join("");
-}
+import {utf8ToHex} from "../src/ultis/ultis";
 
 async function main() {
     const lucid = await getLucidOgmiosInstance();
@@ -53,5 +45,3 @@ async function main() {
         console.error("Transaction failed!");
     }
 }
-
-// main();

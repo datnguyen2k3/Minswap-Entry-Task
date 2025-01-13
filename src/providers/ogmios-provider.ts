@@ -309,7 +309,7 @@ export class OgmiosProvider implements Provider {
             const utxos = await client.utxo({addresses: [addressOrCredential]});
             const lucidUtxos = this.toUtxos(utxos);
             return lucidUtxos;
-        } else {
+        } else { // TODO: handle case of Credential
             throw new Error("Method not implemented.");
         }
     }
