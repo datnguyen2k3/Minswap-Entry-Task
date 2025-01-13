@@ -1,18 +1,20 @@
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
-import {Constr, Data} from "@lucid-evolution/lucid";
-import {getPrivateKey, getPublicKeyHash, getScriptsAddress} from "./common";
+import {Data} from "@lucid-evolution/lucid";
+import {getPrivateKey, getPublicKeyHash, getScriptsAddress, toCBOR} from "./common";
+
+const DatumScheme1 = Data.Object({
+    owner: Data.Bytes(),
+});
 
 async function main(): Promise<void> {
-    await lock_assets(0, BigInt(1000000));
+    const datum = toCBOR({owner: await getPublicKeyHash()}, DatumScheme1);
+    const scriptAddress = getScriptsAddress(0);
+    await lock_assets(scriptAddress, BigInt(1000000), datum);
 }
 
-export async function lock_assets(validator_index: number, assets: bigint): Promise<void> {
+export async function lock_assets(scriptAddress: string, assets: bigint, datum: string): Promise<void> {
     const lucid = await getLucidOgmiosInstance();
     lucid.selectWallet.fromPrivateKey(getPrivateKey());
-
-    const scriptAddress = getScriptsAddress(validator_index);
-    const publicKeyHash = await getPublicKeyHash();
-    const datum = Data.to(new Constr(0, [publicKeyHash]));
 
     const tx = await lucid
         .newTx()

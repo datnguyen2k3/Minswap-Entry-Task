@@ -50,6 +50,12 @@ export async function getPublicKeyHash(): Promise<string> {
     return publicKeyHash;
 }
 
+export function toCBOR(data: Object, DataSchema: any): Datum {
+    type SchemeType = Data.Static<typeof DataSchema>;
+    const SchemeType = DataSchema as unknown as SchemeType;
+    return Data.to<SchemeType>(data, SchemeType);
+}
+
 export async function getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress: string, publicKeyHash: string): Promise<UTxO[]> {
     const lucid = await getLucidOgmiosInstance();
     const scriptsAddressUtxos = await lucid.utxosAt(scriptAddress);
