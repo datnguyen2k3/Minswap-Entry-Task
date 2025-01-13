@@ -33,6 +33,26 @@ export class OgmiosProvider implements Provider {
         this.ledgerStateClient = undefined;
     }
 
+    public static async getInstance(): Promise<OgmiosProvider>{
+        const context = await Ogmios.createInteractionContext(
+            (err) => {
+                console.error("ogmios error", err)
+            },
+            (code, reason) => {
+                console.error("ogmios close", {code, reason})
+            },
+            {
+                connection: {
+                    address: {
+                        http: "https://ogmios1qx87def2yqulc2gpet5.preprod-v6.ogmios-m1.demeter.run",
+                        webSocket: "wss://ogmios1qx87def2yqulc2gpet5.preprod-v6.ogmios-m1.demeter.run",
+                    }
+                }
+            }
+        );
+        return new OgmiosProvider(context);
+    }
+
     async getLedgerStateClient(): Promise<LedgerStateQueryClient> {
         if (this.ledgerStateClient) {
             return this.ledgerStateClient;

@@ -3,24 +3,7 @@ import {OgmiosProvider} from "./providers/ogmios-provider";
 import {Blockfrost, Lucid} from "@lucid-evolution/lucid";
 
 export async function getLucidOgmiosInstance() {
-    const context = await Ogmios.createInteractionContext(
-        (err) => {
-            console.error("ogmios error", err)
-        },
-        (code, reason) => {
-            console.error("ogmios close", {code, reason})
-        },
-        {
-            connection: {
-                address: {
-                    http: "https://ogmios1qx87def2yqulc2gpet5.preprod-v6.ogmios-m1.demeter.run",
-                    webSocket: "wss://ogmios1qx87def2yqulc2gpet5.preprod-v6.ogmios-m1.demeter.run",
-                }
-            }
-        }
-    );
-
-    const provider = new OgmiosProvider(context);
+    const provider = await OgmiosProvider.getInstance();
     return await Lucid(provider, "Preprod");
 }
 

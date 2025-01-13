@@ -1,6 +1,5 @@
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
-import fs from "node:fs";
-import {Constr, Data, getAddressDetails, SpendingValidator, validatorToAddress} from "@lucid-evolution/lucid";
+import {Constr, Data} from "@lucid-evolution/lucid";
 import {getPrivateKey, getPublicKeyHash, getScriptsAddress} from "./common";
 
 async function main(): Promise<void> {
