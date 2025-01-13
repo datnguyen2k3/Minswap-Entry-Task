@@ -21,7 +21,7 @@ async function main() {
     const lucid = await getLucidOgmiosInstance();
     lucid.selectWallet.fromPrivateKey(getPrivateKey());
 
-    const scriptAddress = getScriptsAddress();
+    const scriptAddress = getScriptsAddress(0);
     const publicKeyHash = await getPublicKeyHash();
     const amount = 1000000;
     const datum = Data.to(new Constr(0, [publicKeyHash]));
@@ -33,7 +33,7 @@ async function main() {
         .newTx()
         .collectFrom(utxos, redeemer)
         .addSigner(await lucid.wallet().address())
-        .attach.SpendingValidator(getSpendingValidator())
+        .attach.SpendingValidator(getSpendingValidator(0))
         .pay.ToAddress(
             "addr_test1vpfsn7ncdptvzf3dp9dcnt0kfl522f266xg59jw9xu6eusgmessnp",
             {lovelace: BigInt(amount)}

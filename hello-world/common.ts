@@ -10,9 +10,9 @@ import {
 import fs from "node:fs";
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
 
-export function getSpendingValidator(): SpendingValidator {
+export function getSpendingValidator(validator_index: number): SpendingValidator {
     const plutusJson = JSON.parse(fs.readFileSync("plutus.json", "utf8"));
-    const compiledCode = plutusJson.validators[0].compiledCode;
+    const compiledCode = plutusJson.validators[validator_index].compiledCode;
     const plutusVersion = "PlutusV3";
 
     return {
@@ -21,8 +21,8 @@ export function getSpendingValidator(): SpendingValidator {
     };
 }
 
-export function getScriptsAddress(): string {
-    const spend_val = getSpendingValidator();
+export function getScriptsAddress(validator_index: number): string {
+    const spend_val = getSpendingValidator(validator_index);
 
     const scriptAddress = validatorToAddress("Preprod", spend_val);
     console.log("Script address:", scriptAddress);
