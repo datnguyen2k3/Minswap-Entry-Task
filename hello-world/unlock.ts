@@ -6,20 +6,22 @@ import {
     getSpendingValidator,
     getUTxOsFromScriptAddressByPublicKeyHash
 } from "./common";
-import {Constr, Data} from "@lucid-evolution/lucid";
+import {Constr, Data, UTxO} from "@lucid-evolution/lucid";
 import {utf8ToHex} from "../src/ultis/ultis";
 
 async function main() {
-    const lucid = await getLucidOgmiosInstance();
-    lucid.selectWallet.fromPrivateKey(getPrivateKey());
-
     const scriptAddress = getScriptsAddress(0);
     const publicKeyHash = await getPublicKeyHash();
-    const amount = 1000000;
-    const datum = Data.to(new Constr(0, [publicKeyHash]));
-    const redeemer = Data.to(new Constr(0, [utf8ToHex("Hello, World!")]));
-
     const utxos = await getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress, publicKeyHash);
+    const redeemer = Data.to(new Constr(0, [utf8ToHex("Hello, World!")]));
+    const receiveAddress = "addr_test1vpfsn7ncdptvzf3dp9dcnt0kfl522f266xg59jw9xu6eusgmessnp";
+
+    await unlock_assets(utxos, BigInt(1000000), redeemer, receiveAddress);
+}
+
+export async function unlock_assets(utxos: UTxO[], amount: bigint, redeemer: string, receiveAddress: string): Promise<void> {
+    const lucid = await getLucidOgmiosInstance();
+    lucid.selectWallet.fromPrivateKey(getPrivateKey());
 
     const tx = await lucid
         .newTx()
@@ -27,7 +29,7 @@ async function main() {
         .addSigner(await lucid.wallet().address())
         .attach.SpendingValidator(getSpendingValidator(0))
         .pay.ToAddress(
-            "addr_test1vpfsn7ncdptvzf3dp9dcnt0kfl522f266xg59jw9xu6eusgmessnp",
+            receiveAddress,
             {lovelace: BigInt(amount)}
         )
         .complete();
@@ -45,3 +47,5 @@ async function main() {
         console.error("Transaction failed!");
     }
 }
+
+main();
