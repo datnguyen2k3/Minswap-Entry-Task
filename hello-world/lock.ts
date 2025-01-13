@@ -40,4 +40,4 @@ export async function lock_assets(scriptAddress: string, assets: bigint, datum: 
     }
 }
 
-main();
+// main();
