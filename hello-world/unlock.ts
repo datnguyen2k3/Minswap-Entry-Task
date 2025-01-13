@@ -7,6 +7,7 @@ import {
     getUTxOsFromScriptAddressByPublicKeyHash
 } from "./common";
 import {Constr, Data} from "@lucid-evolution/lucid";
+import {getBlockfrostInstance} from "../src/providers/blockfrost-provider";
 
 function utf8ToHex(str: string): string {
     const encoder = new TextEncoder();
