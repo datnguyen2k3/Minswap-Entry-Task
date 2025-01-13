@@ -1,4 +1,4 @@
-import {getLucidInstance} from "../src/lucid-instance";
+import {getLucidOgmiosInstance} from "../src/lucid-instance";
 import {
     getPrivateKey,
     getPublicKeyHash,
@@ -17,7 +17,7 @@ function utf8ToHex(str: string): string {
 }
 
 async function main() {
-    const lucid = await getLucidInstance();
+    const lucid = await getLucidOgmiosInstance();
     lucid.selectWallet.fromPrivateKey(getPrivateKey());
 
     const scriptAddress = getScriptsAddress();

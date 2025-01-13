@@ -8,7 +8,7 @@ import {
     Datum
 } from "@lucid-evolution/lucid";
 import fs from "node:fs";
-import {getLucidInstance} from "../src/lucid-instance";
+import {getLucidOgmiosInstance} from "../src/lucid-instance";
 
 export function getSpendingValidator(): SpendingValidator {
     const plutusJson = JSON.parse(fs.readFileSync("plutus.json", "utf8"));
@@ -34,7 +34,7 @@ export function getPrivateKey(): string {
 }
 
 export async function getPublicKeyHash(): Promise<string> {
-    const lucid = await getLucidInstance();
+    const lucid = await getLucidOgmiosInstance();
     lucid.selectWallet.fromPrivateKey(getPrivateKey());
 
 
@@ -51,7 +51,7 @@ export async function getPublicKeyHash(): Promise<string> {
 }
 
 export async function getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress: string, publicKeyHash: string): Promise<UTxO[]> {
-    const lucid = await getLucidInstance();
+    const lucid = await getLucidOgmiosInstance();
     const scriptsAddressUtxos = await lucid.utxosAt(scriptAddress);
 
     const DatumSchema = Data.Object({

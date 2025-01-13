@@ -1,8 +1,8 @@
 import * as Ogmios from "@cardano-ogmios/client";
-import {OgmiosProvider} from "./ogmios/ogmios-provider";
-import {Lucid} from "@lucid-evolution/lucid";
+import {OgmiosProvider} from "./providers/ogmios-provider";
+import {Blockfrost, Lucid} from "@lucid-evolution/lucid";
 
-export async function getLucidInstance() {
+export async function getLucidOgmiosInstance() {
     const context = await Ogmios.createInteractionContext(
         (err) => {
             console.error("ogmios error", err)
@@ -21,5 +21,10 @@ export async function getLucidInstance() {
     );
 
     const provider = new OgmiosProvider(context);
+    return await Lucid(provider, "Preprod");
+}
+
+export async function getLucidBlockfrostInstance() {
+    const provider = new Blockfrost("https://cardano-preprod.blockfrost.io/api/v0", "preprodAq47SEvsVpbW03U2DkjEBG908A5D7oFx");
     return await Lucid(provider, "Preprod");
 }

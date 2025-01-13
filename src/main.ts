@@ -1,8 +1,8 @@
-import {getLucidInstance} from "./lucid-instance";
+import {getLucidOgmiosInstance} from "./lucid-instance";
 import {LucidEvolution} from "@lucid-evolution/lucid";
 
 const main = async () => {
-    const lucid = await getLucidInstance();
+    const lucid = await getLucidOgmiosInstance();
     const seedPhrase = "urge chuckle print picture behind hat client ask sword payment uncover equip alert rely remove crash letter grunt edit twenty test ecology museum dry";
     lucid.selectWallet.fromSeed(seedPhrase);
 

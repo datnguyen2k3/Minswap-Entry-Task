@@ -1,10 +1,10 @@
-import {getLucidInstance} from "../src/lucid-instance";
+import {getLucidOgmiosInstance} from "../src/lucid-instance";
 import fs from "node:fs";
 import {Constr, Data, getAddressDetails, SpendingValidator, validatorToAddress} from "@lucid-evolution/lucid";
 import {getPrivateKey, getPublicKeyHash, getScriptsAddress} from "./common";
 
 async function main(): Promise<void> {
-    const lucid = await getLucidInstance();
+    const lucid = await getLucidOgmiosInstance();
     lucid.selectWallet.fromPrivateKey(getPrivateKey());
 
     const scriptAddress = getScriptsAddress();

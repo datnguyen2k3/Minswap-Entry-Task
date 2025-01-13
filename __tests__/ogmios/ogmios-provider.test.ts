@@ -1,4 +1,4 @@
-import {OgmiosProvider} from "../../src/ogmios/ogmios-provider";
+import {OgmiosProvider} from "../../src/providers/ogmios-provider";
 import * as Ogmios from "@cardano-ogmios/client";
 import {Blockfrost, Constr, Data, Lucid, LucidEvolution, OutRef, UTxO} from "@lucid-evolution/lucid";
 import {ProtocolParameters} from "@lucid-evolution/lucid";

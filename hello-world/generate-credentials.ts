@@ -1,5 +1,5 @@
 import * as Ogmios from "@cardano-ogmios/client";
-import {OgmiosProvider} from "../src/ogmios/ogmios-provider";
+import {OgmiosProvider} from "../src/providers/ogmios-provider";
 import {generatePrivateKey, Lucid} from "@lucid-evolution/lucid";
 import fs from 'node:fs';
 
