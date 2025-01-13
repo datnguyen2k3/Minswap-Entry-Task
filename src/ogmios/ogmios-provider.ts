@@ -13,7 +13,7 @@ import {
     ProtocolParameters,
     Provider,
     RewardAddress,
-    Script,
+    Script, ScriptType,
     Transaction,
     TxHash,
     Unit,
@@ -21,6 +21,7 @@ import {
 } from "@lucid-evolution/lucid";
 import {TransactionSubmissionClient} from "@cardano-ogmios/client/dist/TransactionSubmission";
 import {parseFraction} from "../ultis/math_ultis";
+import {EvaluationResult} from "@cardano-ogmios/client/dist/TransactionSubmission/evaluateTransaction";
 
 export class OgmiosProvider implements Provider {
     context: InteractionContext;
@@ -204,6 +205,77 @@ export class OgmiosProvider implements Provider {
         return result;
     }
 
+    fromValue(value: Assets): Schema.Value {
+        const resultValue: Schema.Value = {
+            ada: {
+                lovelace: value["lovelace"]
+            }
+        };
+
+        for (const assetId in value) {
+            if (assetId !== 'lovelace') {
+                const assetAmount = value[assetId];
+                const policyId = assetId.slice(0, 56);
+                const assetName = assetId.slice(56);
+                if (!resultValue[policyId]) {
+                    resultValue[policyId] = {};
+                }
+                resultValue[policyId][assetName] = assetAmount;
+            }
+        }
+        return resultValue;
+    }
+
+    fromLanguage(scriptType: ScriptType): any {
+        switch (scriptType) {
+            case "PlutusV1":
+                return "plutus:v1";
+            case "PlutusV2":
+                return "plutus:v2";
+            case "PlutusV3":
+                return "plutus:v3";
+            case "Native":
+                return "native";
+            default:
+                throw new Error("Scripts Type is not support")
+        }
+    }
+
+    fromScripts(scriptRef: Script | null | undefined): Schema.Script | null | undefined {
+        if (scriptRef === undefined) {
+            return undefined;
+        }
+
+        if (scriptRef === null) {
+            return null;
+        }
+        return {
+            language: this.fromLanguage(scriptRef.type),
+            cbor: scriptRef.script
+        }
+    }
+
+    fromUtxo(utxo: UTxO): any {
+        return {
+            transaction: {
+                id: utxo.txHash
+            },
+            index: utxo.outputIndex,
+            address: utxo.address,
+            value: this.fromValue(utxo.assets),
+            datumHash: utxo.datumHash,
+            datum: utxo.datum,
+            script: this.fromScripts(utxo.scriptRef),
+        };
+    }
+
+    fromUtxos(utxos: UTxO[] | undefined): Schema.Utxo {
+        if (!utxos) {
+            return [];
+        }
+        return utxos.map(utxo => this.fromUtxo(utxo));
+    }
+
     async getProtocolParameters(): Promise<ProtocolParameters> {
         const client = await this.getLedgerStateClient();
         const ogmiosProtocolParameters = await client.protocolParameters();
@@ -306,8 +378,25 @@ export class OgmiosProvider implements Provider {
         return txHash;
     }
 
-    evaluateTx(tx: Transaction, additionalUTxOs?: UTxO[]): Promise<EvalRedeemer[]> {
-        throw new Error("Method not implemented.");
+    toEvalRedeemer(evaluationResult: EvaluationResult): EvalRedeemer {
+        return {
+            ex_units: {
+                mem: evaluationResult.budget.memory,
+                steps: evaluationResult.budget.cpu
+            },
+            redeemer_index: evaluationResult.validator.index,
+            redeemer_tag: evaluationResult.validator.purpose
+        }
+    }
+
+    toEvalRedeemers(evaluationResults: EvaluationResult[]): EvalRedeemer[] {
+        return evaluationResults.map(evaluationResult => this.toEvalRedeemer(evaluationResult));
+    }
+
+    async evaluateTx(tx: Transaction, additionalUTxOs?: UTxO[]): Promise<EvalRedeemer[]> {
+        const client = await this.getTransactionSubmissionClient();
+        const evaluationResults = await client.evaluateTransaction(tx, this.fromUtxos(additionalUTxOs));
+        return this.toEvalRedeemers(evaluationResults);
     }
 
 }

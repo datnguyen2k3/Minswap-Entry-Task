@@ -1,12 +1,15 @@
 import {OgmiosProvider} from "../../src/ogmios/ogmios-provider";
 import * as Ogmios from "@cardano-ogmios/client";
-import {Blockfrost, OutRef, UTxO} from "@lucid-evolution/lucid";
+import {Blockfrost, Constr, Data, Lucid, LucidEvolution, OutRef, UTxO} from "@lucid-evolution/lucid";
 import {ProtocolParameters} from "@lucid-evolution/lucid";
 import {sortUTxO} from "../../src/ultis/math_ultis";
+import {getPrivateKey, getPublicKeyHash, getScriptsAddress} from "../../hello-world/common";
 
 describe("#OgmiosProvider", () => {
     let ogmiosProvider: OgmiosProvider;
     let blockfrostProvider: Blockfrost;
+    let ogmiosLucid: LucidEvolution;
+    let blockfrostLucid: LucidEvolution;
 
     beforeEach(async () => {
         const context = await Ogmios.createInteractionContext(
@@ -28,6 +31,9 @@ describe("#OgmiosProvider", () => {
 
         ogmiosProvider = new OgmiosProvider(context);
         blockfrostProvider = new Blockfrost("https://cardano-preprod.blockfrost.io/api/v0", "preprodAq47SEvsVpbW03U2DkjEBG908A5D7oFx");
+
+        ogmiosLucid = await Lucid(ogmiosProvider, "Preprod");
+        blockfrostLucid = await Lucid(blockfrostProvider, "Preprod");
     });
 
     function expectEqualUTxOs(utxos: UTxO[], expectedUtxos: UTxO[]) {
@@ -64,6 +70,22 @@ describe("#OgmiosProvider", () => {
                 const utxos = await ogmiosProvider.getUtxos(address);
 
                 expectEqualUTxOs(utxos, expectedUtxos);
+            });
+        });
+
+        describe("with output is UTxO has script", () => {
+            let address: string = "addr_test1wqn7wnkhny2j475ac709vg3kw6wf59f3hdl3htfpwg8xmtqtxyz6a";
+            let expectedUtxos: UTxO[];
+
+            beforeEach(async () => {
+                expectedUtxos = await blockfrostProvider.getUtxos(address);
+                console.log(expectedUtxos);
+            });
+
+            it("should return the expected utxos", async () => {
+                const utxos = await ogmiosProvider.getUtxos(address);
+
+                expectEqualUTxOs(utxos, expectedUtxos); // TODO: Fix scripts data
             });
         });
     });
@@ -108,5 +130,45 @@ describe("#OgmiosProvider", () => {
                 expect(tx).toEqual(false);
             });
         });
+    });
+
+    describe("#evaluateTx", () => { // TODO: Fix this test
+       describe("with input is scripts tx", () => {
+           it ("should return the expected result", async () => {
+                ogmiosLucid.selectWallet.fromPrivateKey(getPrivateKey());
+                blockfrostLucid.selectWallet.fromPrivateKey(getPrivateKey());
+
+                const scriptAddress = getScriptsAddress();
+                const publicKeyHash = await getPublicKeyHash();
+                const datum = Data.to(new Constr(0, [publicKeyHash]));
+                const amount = 1000000;
+
+                const ogmiosTx = await ogmiosLucid
+                    .newTx()
+                    .pay.ToAddressWithData(
+                        scriptAddress,
+                        {kind: "inline", value: datum},
+                        {lovelace: BigInt(amount)}
+                    )
+                    .complete();
+
+                const blockfrostTx = await blockfrostLucid
+                    .newTx()
+                    .pay.ToAddressWithData(
+                        scriptAddress,
+                        {kind: "inline", value: datum},
+                        {lovelace: BigInt(amount)}
+                    )
+                    .complete();
+
+                const signedOgmiosTx = await ogmiosTx.sign.withWallet().complete();
+                const signedBlockfrostTx = await blockfrostTx.sign.withWallet().complete();
+
+                const ogmiosEvalRedeemer = await ogmiosProvider.evaluateTx(signedOgmiosTx.toTransaction().to_cbor_hex());
+                const blockfrostEvalRedeemer = await blockfrostProvider.evaluateTx(signedBlockfrostTx.toTransaction().to_cbor_hex());
+
+                expect(ogmiosEvalRedeemer).toEqual(blockfrostEvalRedeemer);
+           });
+       });
     });
 });
