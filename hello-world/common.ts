@@ -56,6 +56,12 @@ export function toCBOR(data: Object, DataSchema: any): Datum {
     return Data.to<SchemeType>(data, SchemeType);
 }
 
+export function toObject(datum: Datum, DataSchema: any): any {
+    type SchemeType = Data.Static<typeof DataSchema>;
+    const SchemeType = DataSchema as unknown as SchemeType;
+    return Data.from(datum, SchemeType);
+}
+
 export async function getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress: string, publicKeyHash: string): Promise<UTxO[]> {
     const lucid = await getLucidOgmiosInstance();
     const scriptsAddressUtxos = await lucid.utxosAt(scriptAddress);
@@ -63,15 +69,13 @@ export async function getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress: st
     const DatumSchema = Data.Object({
         owner: Data.Bytes(),
     });
-    type DatumType = Data.Static<typeof DatumSchema>;
-    const DatumType = DatumSchema as unknown as DatumType;
 
     const ownerUTxOs: UTxO[] = [];
 
     for (const utxo of scriptsAddressUtxos) {
         if (utxo.datum) {
             try {
-                const datum = Data.from(utxo.datum, DatumType);
+                const datum = toObject(utxo.datum, DatumSchema);
                 if (datum.owner === publicKeyHash) {
                     ownerUTxOs.push(utxo);
                 }
