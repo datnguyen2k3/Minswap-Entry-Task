@@ -37,6 +37,84 @@
       "hash": "27e74ed799152afa9dc79e562236769c9a1531bb7f1bad21720e6dac"
     },
     {
+      "title": "onshot.gift_card.spend",
+      "datum": {
+        "title": "_d",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "redeemer": {
+        "title": "_r",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "parameters": [
+        {
+          "title": "token_name",
+          "schema": {
+            "$ref": "#/definitions/ByteArray"
+          }
+        },
+        {
+          "title": "utxo_ref",
+          "schema": {
+            "$ref": "#/definitions/cardano~1transaction~1OutputReference"
+          }
+        }
+      ],
+      "compiledCode": "5902820101003232323232323223222533300532323232323232323253233300f300400513233223232325333015300730163754002264a66602c6016602e6ea80044c8c94ccc06cc0780084c94ccc064cdc39bad301b002480044cdc780080b8a50375c60320022c6038002660140066eb8c06cc060dd50008b1804180b9baa30083017375460346036602e6ea8c068c05cdd50008b19198008009bac301a00322533301900114c0103d87a80001332253330183375e601660346ea80080204cdd2a40006603800497ae0133004004001301b001301c00137566030603260326032603200260286ea802cc054004c054c058004c044dd50030a99980798008028991919299980918020008a99980a980a1baa00a0021615333012300700115333015301437540140042c2c60246ea80244c8c8c8c94ccc05cc0680084c8c94ccc058c020c05cdd50070a99980b191980080080311299980d8008a5013322533301a3375e601a60386ea800805c528899802002000980e800980f0008a99980b1805800899b8f00201414a02c2a66602c66e1c005200113371e0040282940dd6980b8011bae3015001163018001330063756602e60306030603060300040066eb0c058004c048dd50049bae30143011375400c2c6e1d2000230130012232533300f300430103754002297adef6c6013756602860226ea8004c8cc00400400c894ccc04c004530103d87a800013233322253330143372200e0062a66602866e3c01c00c4cdd2a4000660306e980092f5c02980103d87a8000133006006001375c60240026eacc04c004c05c008c054004dc3a400460166ea8004c038c03c00cc034008c030008c030004c01cdd50008a4c26cac6eb80055cd2ab9d5573caae7d5d02ba15745",
+      "hash": "2597f41212028dc909da4da09ef63e230b4528fed131a613c5c6fa96"
+    },
+    {
+      "title": "onshot.gift_card.mint",
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/onshot~1Action"
+        }
+      },
+      "parameters": [
+        {
+          "title": "token_name",
+          "schema": {
+            "$ref": "#/definitions/ByteArray"
+          }
+        },
+        {
+          "title": "utxo_ref",
+          "schema": {
+            "$ref": "#/definitions/cardano~1transaction~1OutputReference"
+          }
+        }
+      ],
+      "compiledCode": "5902820101003232323232323223222533300532323232323232323253233300f300400513233223232325333015300730163754002264a66602c6016602e6ea80044c8c94ccc06cc0780084c94ccc064cdc39bad301b002480044cdc780080b8a50375c60320022c6038002660140066eb8c06cc060dd50008b1804180b9baa30083017375460346036602e6ea8c068c05cdd50008b19198008009bac301a00322533301900114c0103d87a80001332253330183375e601660346ea80080204cdd2a40006603800497ae0133004004001301b001301c00137566030603260326032603200260286ea802cc054004c054c058004c044dd50030a99980798008028991919299980918020008a99980a980a1baa00a0021615333012300700115333015301437540140042c2c60246ea80244c8c8c8c94ccc05cc0680084c8c94ccc058c020c05cdd50070a99980b191980080080311299980d8008a5013322533301a3375e601a60386ea800805c528899802002000980e800980f0008a99980b1805800899b8f00201414a02c2a66602c66e1c005200113371e0040282940dd6980b8011bae3015001163018001330063756602e60306030603060300040066eb0c058004c048dd50049bae30143011375400c2c6e1d2000230130012232533300f300430103754002297adef6c6013756602860226ea8004c8cc00400400c894ccc04c004530103d87a800013233322253330143372200e0062a66602866e3c01c00c4cdd2a4000660306e980092f5c02980103d87a8000133006006001375c60240026eacc04c004c05c008c054004dc3a400460166ea8004c038c03c00cc034008c030008c030004c01cdd50008a4c26cac6eb80055cd2ab9d5573caae7d5d02ba15745",
+      "hash": "2597f41212028dc909da4da09ef63e230b4528fed131a613c5c6fa96"
+    },
+    {
+      "title": "onshot.gift_card.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "parameters": [
+        {
+          "title": "token_name",
+          "schema": {
+            "$ref": "#/definitions/ByteArray"
+          }
+        },
+        {
+          "title": "utxo_ref",
+          "schema": {
+            "$ref": "#/definitions/cardano~1transaction~1OutputReference"
+          }
+        }
+      ],
+      "compiledCode": "5902820101003232323232323223222533300532323232323232323253233300f300400513233223232325333015300730163754002264a66602c6016602e6ea80044c8c94ccc06cc0780084c94ccc064cdc39bad301b002480044cdc780080b8a50375c60320022c6038002660140066eb8c06cc060dd50008b1804180b9baa30083017375460346036602e6ea8c068c05cdd50008b19198008009bac301a00322533301900114c0103d87a80001332253330183375e601660346ea80080204cdd2a40006603800497ae0133004004001301b001301c00137566030603260326032603200260286ea802cc054004c054c058004c044dd50030a99980798008028991919299980918020008a99980a980a1baa00a0021615333012300700115333015301437540140042c2c60246ea80244c8c8c8c94ccc05cc0680084c8c94ccc058c020c05cdd50070a99980b191980080080311299980d8008a5013322533301a3375e601a60386ea800805c528899802002000980e800980f0008a99980b1805800899b8f00201414a02c2a66602c66e1c005200113371e0040282940dd6980b8011bae3015001163018001330063756602e60306030603060300040066eb0c058004c048dd50049bae30143011375400c2c6e1d2000230130012232533300f300430103754002297adef6c6013756602860226ea8004c8cc00400400c894ccc04c004530103d87a800013233322253330143372200e0062a66602866e3c01c00c4cdd2a4000660306e980092f5c02980103d87a8000133006006001375c60240026eacc04c004c05c008c054004dc3a400460166ea8004c038c03c00cc034008c030008c030004c01cdd50008a4c26cac6eb80055cd2ab9d5573caae7d5d02ba15745",
+      "hash": "2597f41212028dc909da4da09ef63e230b4528fed131a613c5c6fa96"
+    },
+    {
       "title": "vesting.vesting.spend",
       "datum": {
         "title": "datum",
@@ -70,6 +148,9 @@
       "title": "Data",
       "description": "Any Plutus data."
     },
+    "Int": {
+      "dataType": "integer"
+    },
     "POSIXTime": {
       "title": "POSIXTime",
       "dataType": "integer"
@@ -77,6 +158,27 @@
     "VerificationKeyHash": {
       "title": "VerificationKeyHash",
       "dataType": "bytes"
+    },
+    "cardano/transaction/OutputReference": {
+      "title": "OutputReference",
+      "description": "An `OutputReference` is a unique reference to an output on-chain. The `output_index`\n corresponds to the position in the output list of the transaction (identified by its id)\n that produced that output",
+      "anyOf": [
+        {
+          "title": "OutputReference",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "transaction_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "output_index",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
     },
     "hello_world/Datum": {
       "title": "Datum",
@@ -107,6 +209,23 @@
               "$ref": "#/definitions/ByteArray"
             }
           ]
+        }
+      ]
+    },
+    "onshot/Action": {
+      "title": "Action",
+      "anyOf": [
+        {
+          "title": "CheckMint",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "CheckBurn",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
         }
       ]
     },
