@@ -4,7 +4,7 @@ import {
     getPrivateKey,
     getPublicKeyHash,
     getScriptsAddress,
-    getSpendingValidator,
+    getValidator,
     isCantCastCborToObject, submitTx,
     toCBOR,
     toObject
@@ -17,7 +17,7 @@ const DatumVestingScheme = Data.Object({
     beneficiary: Data.Bytes(),
 });
 
-const VestingValidatorIndex = 2;
+const VestingValidatorIndex = 5;
 
 export async function lockAssetsToVestingScriptsAddress(amount: bigint): Promise<void> {
     const vestingScriptAddress = getScriptsAddress(VestingValidatorIndex);
@@ -69,8 +69,7 @@ export async function getVestingScriptAddressUTxOs(): Promise<UTxO[]> {
 export async function unlockAssetsToVestingScriptsAddress(): Promise<void> {
     const utxos = await getVestingScriptAddressUTxOs();
     const receiveAddress = "addr_test1vpfsn7ncdptvzf3dp9dcnt0kfl522f266xg59jw9xu6eusgmessnp"
-    const spendValidator = getSpendingValidator(VestingValidatorIndex);
-    const scriptsAddress = getScriptsAddress(VestingValidatorIndex);
+    const spendValidator = getValidator(VestingValidatorIndex);
     const redeemer = Data.to(new Constr(0, [utf8ToHex("Hello, World!")]));
     const amount = BigInt(1000000);
 

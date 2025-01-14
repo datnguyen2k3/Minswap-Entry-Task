@@ -5,12 +5,12 @@ import {
     toPublicKey,
     UTxO,
     Data,
-    Datum, TxSignBuilder, LucidEvolution
+    Datum, TxSignBuilder, LucidEvolution, Validator
 } from "@lucid-evolution/lucid";
 import fs from "node:fs";
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
 
-export function getSpendingValidator(validator_index: number): SpendingValidator {
+export function getValidator(validator_index: number): Validator {
     const plutusJson = JSON.parse(fs.readFileSync("plutus.json", "utf8"));
     const compiledCode = plutusJson.validators[validator_index].compiledCode;
     const plutusVersion = "PlutusV3";
@@ -22,9 +22,9 @@ export function getSpendingValidator(validator_index: number): SpendingValidator
 }
 
 export function getScriptsAddress(validator_index: number): string {
-    const spend_val = getSpendingValidator(validator_index);
+    const validator = getValidator(validator_index);
 
-    const scriptAddress = validatorToAddress("Preprod", spend_val);
+    const scriptAddress = validatorToAddress("Preprod", validator);
     console.log("Script address:", scriptAddress);
     return scriptAddress;
 }

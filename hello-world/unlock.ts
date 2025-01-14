@@ -3,7 +3,7 @@ import {
     getPrivateKey,
     getPublicKeyHash,
     getScriptsAddress,
-    getSpendingValidator,
+    getValidator,
     getUTxOsFromScriptAddressByPublicKeyHash, submitTx
 } from "./common";
 import {Constr, Data, UTxO, Validator, SpendingValidator} from "@lucid-evolution/lucid";
@@ -15,7 +15,7 @@ async function main() {
     const utxos = await getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress, publicKeyHash);
     const redeemer = Data.to(new Constr(0, [utf8ToHex("Hello, World!")]));
     const receiveAddress = "addr_test1vpfsn7ncdptvzf3dp9dcnt0kfl522f266xg59jw9xu6eusgmessnp";
-    const spendingValidator = getSpendingValidator(0);
+    const spendingValidator = getValidator(0);
 
     await unlock_assets(
         utxos,
