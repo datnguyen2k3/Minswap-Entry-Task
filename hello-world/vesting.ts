@@ -10,7 +10,6 @@ import {
     toObject
 } from "./common";
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
-import {unlock_assets} from "./unlock";
 import {utf8ToHex} from "../src/ultis/ultis";
 
 const DatumVestingScheme = Data.Object({
