@@ -2,7 +2,7 @@ import * as Ogmios from "@cardano-ogmios/client";
 import {InteractionContext, Schema} from "@cardano-ogmios/client";
 import {LedgerStateQueryClient} from "@cardano-ogmios/client/dist/LedgerStateQuery";
 import {
-    Address,
+    Address, applyDoubleCborEncoding,
     Assets,
     Credential,
     Datum,
@@ -201,7 +201,7 @@ export class OgmiosProvider implements Provider {
 
         return {
             type: this.toScriptType(script?.language),
-            script: script?.cbor
+            script: applyDoubleCborEncoding(script?.cbor)
         }
     }
 

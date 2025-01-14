@@ -84,7 +84,7 @@ describe("#OgmiosProvider", () => {
             it("should return the expected utxos", async () => {
                 const utxos = await ogmiosProvider.getUtxos(address);
 
-                expectEqualUTxOs(utxos, expectedUtxos); // TODO: Fix scripts data
+                expectEqualUTxOs(utxos, expectedUtxos);
             });
         });
     });
