@@ -4,7 +4,7 @@ import {
     getPublicKeyHash,
     getScriptsAddress,
     getSpendingValidator,
-    getUTxOsFromScriptAddressByPublicKeyHash
+    getUTxOsFromScriptAddressByPublicKeyHash, submitTx
 } from "./common";
 import {Constr, Data, UTxO, Validator, SpendingValidator} from "@lucid-evolution/lucid";
 import {utf8ToHex} from "../src/ultis/ultis";
@@ -45,18 +45,7 @@ export async function unlock_assets(utxos: UTxO[], validator: Validator, purpose
     }
 
     const completeTx = await tx.complete();
-    const signedTx = await completeTx.sign.withWallet().complete();
-    const txHash = await signedTx.submit();
-    console.log("TxHash: ", txHash);
-
-    console.log("Waiting for transaction to be confirmed...");
-
-    const isSuccess = await lucid.awaitTx(txHash);
-    if (isSuccess) {
-        console.log("Transaction confirmed!");
-    } else {
-        console.error("Transaction failed!");
-    }
+    await submitTx(completeTx, lucid);
 }
 
 // main();

@@ -5,7 +5,7 @@ import {
     toPublicKey,
     UTxO,
     Data,
-    Datum
+    Datum, TxSignBuilder, LucidEvolution
 } from "@lucid-evolution/lucid";
 import fs from "node:fs";
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
@@ -62,6 +62,10 @@ export function toObject(datum: Datum, DataSchema: any): any {
     return Data.from(datum, SchemeType);
 }
 
+export function isCantCastCborToObject(e: unknown): boolean {
+    return e instanceof Error && e.message === "Could not type cast to object.";
+}
+
 export async function getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress: string, publicKeyHash: string): Promise<UTxO[]> {
     const lucid = await getLucidOgmiosInstance();
     const scriptsAddressUtxos = await lucid.utxosAt(scriptAddress);
@@ -80,7 +84,7 @@ export async function getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress: st
                     ownerUTxOs.push(utxo);
                 }
             } catch (e) {
-                if (e instanceof Error && e.message === "Could not type cast to object.") {
+                if (isCantCastCborToObject(e)) {
                     continue;
                 }
                 console.error("Error parsing datum:", e);
@@ -90,4 +94,19 @@ export async function getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress: st
 
     console.log("Owner UTxO:", ownerUTxOs);
     return ownerUTxOs;
+}
+
+export async function submitTx(tx: TxSignBuilder, lucid: LucidEvolution) {
+    const signedTx = await tx.sign.withWallet().complete();
+    const txHash = await signedTx.submit();
+    console.log("TxHash: ", txHash);
+
+    console.log("Waiting for transaction to be confirmed...");
+
+    const isSuccess = await lucid.awaitTx(txHash);
+    if (isSuccess) {
+        console.log("Transaction confirmed!");
+    } else {
+        console.error("Transaction failed!");
+    }
 }
