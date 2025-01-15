@@ -22,11 +22,6 @@ export type AppliedValidators = {
     giftCardScriptsAddress: string;
 };
 
-const OutRefScheme = Data.Object({
-    transaction_id: Data.Bytes(),
-    output_index: Data.Integer(),
-});
-
 export function applyParams(
     tokenName: string,
     outputReference: OutRef,
