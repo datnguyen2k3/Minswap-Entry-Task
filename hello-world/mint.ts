@@ -1,4 +1,4 @@
-import {getPrivateKey, getValidator, submitTx, toCBOR} from "./common";
+import {getPrivateKey, getValidator, submitTx} from "./common";
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
 import {
     applyDoubleCborEncoding,
@@ -13,71 +13,76 @@ import {
     validatorToScriptHash
 } from "@lucid-evolution/lucid";
 
-const mintValidatorIndex = 3;
+export type Validators = {
+  giftCard: string;
+};
+
+export function readValidators(): Validators {
+  return {
+    giftCard: getValidator(3).script,
+  };
+}
+
+const validator = readValidators().giftCard;
 
 export type AppliedValidators = {
-    redeem: SpendingValidator;
-    giftCardScripts: MintingPolicy;
-    policyId: string;
-    giftCardScriptsAddress: string;
+  redeem: SpendingValidator;
+  giftCard: MintingPolicy;
+  policyId: string;
+  lockAddress: string;
 };
 
 export function applyParams(
-    tokenName: string,
-    outputReference: OutRef,
-    validatorScripts: string
+  tokenName: string,
+  outputReference: OutRef,
+  validator: string
 ): AppliedValidators {
-    const outRef = new Constr(0, [
-        new Constr(0, [outputReference.txHash]),
-        BigInt(outputReference.outputIndex),
-    ]);
+  const txId = new Constr(0, [outputReference.txHash]);
+  const txTdx = BigInt(outputReference.outputIndex);
 
-    const scriptsWithParams = applyParamsToScript(validatorScripts, [
-        fromText(tokenName),
-        outRef,
-    ]);
+  const outRef = new Constr(0, [txId, txTdx]);
 
-    const policyId = validatorToScriptHash({
-        type: "PlutusV3",
-        script: scriptsWithParams,
-    });
+  const giftCard = applyParamsToScript(applyDoubleCborEncoding(validator), [
+    fromText(tokenName),
+    outRef,
+  ]);
 
-    const scriptsAddress = validatorToAddress("Preprod", {
-        type: "PlutusV3",
-        script: scriptsWithParams,
-    });
+  const policyId = validatorToScriptHash({
+    type: "PlutusV3",
+    script: giftCard,
+  });
 
-    return {
-        redeem: {type: "PlutusV3", script: scriptsWithParams},
-        giftCardScripts: {type: "PlutusV3", script: scriptsWithParams},
-        policyId,
-        giftCardScriptsAddress: scriptsAddress,
-    };
+  const lockAddress = validatorToAddress("Preprod", {
+    type: "PlutusV3",
+    script: giftCard,
+  });
+
+  return {
+    redeem: { type: "PlutusV3", script: applyDoubleCborEncoding(giftCard) },
+    giftCard: { type: "PlutusV3", script: applyDoubleCborEncoding(giftCard) },
+    policyId,
+    lockAddress,
+  };
 }
 
-async function getAppliedValidators(tokenName: string): Promise<AppliedValidators> {
-    const lucid = await getLucidOgmiosInstance();
-    lucid.selectWallet.fromPrivateKey(getPrivateKey());
+async function submitTokenName(tokenName: string): Promise<AppliedValidators> {
+  const lucid = await getLucidOgmiosInstance();
+  lucid.selectWallet.fromPrivateKey(getPrivateKey());
 
-    const utxos = await lucid.wallet().getUtxos();
+  const utxos = await lucid.wallet().getUtxos();
 
-    const utxo = utxos[0];
-    console.log("UTxO 0:", utxo);
+  const utxo = utxos[0];
+  const outputReference = {
+    txHash: utxo.txHash,
+    outputIndex: utxo.outputIndex
+  };
 
-    const outputReference = {
-        txHash: utxo.txHash,
-        outputIndex: utxo.outputIndex
-    };
-
-    console.log("validator:", getValidator(mintValidatorIndex).script);
-    const validatorScripts = applyDoubleCborEncoding(getValidator(mintValidatorIndex).script);
-
-    return applyParams(tokenName, outputReference, validatorScripts);
+  return applyParams(tokenName, outputReference, validator);
 }
 
 async function createGiftCard(tokenName: string, giftADA: bigint): Promise<void> {
     const lovelace = giftADA * BigInt(1000000);
-    const parameterizedContracts = await getAppliedValidators(tokenName);
+    const parameterizedContracts = await submitTokenName(tokenName);
     console.log("Parameterized contracts:", parameterizedContracts);
 
     const assetName = `${parameterizedContracts.policyId}${fromText(
@@ -95,10 +100,10 @@ async function createGiftCard(tokenName: string, giftADA: bigint): Promise<void>
     const tx = await lucid
         .newTx()
         .collectFrom([utxo])
-        .attach.MintingPolicy(parameterizedContracts.giftCardScripts)
+        .attach.MintingPolicy(parameterizedContracts.giftCard)
         .mintAssets({[assetName]: BigInt(1)}, mintRedeemer)
         .pay.ToContract(
-            parameterizedContracts.giftCardScriptsAddress,
+            parameterizedContracts.lockAddress,
             {kind: 'inline', value: Data.void()},
             {lovelace: BigInt(lovelace)}
         )
