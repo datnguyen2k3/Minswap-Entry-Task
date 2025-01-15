@@ -37,7 +37,7 @@ export function applyParams(
   outputReference: OutRef,
   validator: string
 ): AppliedValidators {
-  const txId = new Constr(0, [outputReference.txHash]);
+  const txId = outputReference.txHash;
   const txTdx = BigInt(outputReference.outputIndex);
 
   const outRef = new Constr(0, [txId, txTdx]);
