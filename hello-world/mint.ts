@@ -80,7 +80,7 @@ async function createGiftCard(tokenName: string, giftADA: bigint): Promise<void>
     const parameterizedContracts = await getAppliedValidators(tokenName);
     console.log("Parameterized contracts:", parameterizedContracts);
 
-    const assetName = `${parameterizedContracts!.policyId}${fromText(
+    const assetName = `${parameterizedContracts.policyId}${fromText(
         tokenName
     )}`
 
@@ -92,13 +92,13 @@ async function createGiftCard(tokenName: string, giftADA: bigint): Promise<void>
     const utxo = utxos[0];
     console.log("UTxO 0:", utxo);
 
-    const tx = await lucid!
+    const tx = await lucid
         .newTx()
         .collectFrom([utxo])
-        .attach.MintingPolicy(parameterizedContracts!.giftCardScripts)
+        .attach.MintingPolicy(parameterizedContracts.giftCardScripts)
         .mintAssets({[assetName]: BigInt(1)}, mintRedeemer)
         .pay.ToContract(
-            parameterizedContracts!.giftCardScriptsAddress,
+            parameterizedContracts.giftCardScriptsAddress,
             {kind: 'inline', value: Data.void()},
             {lovelace: BigInt(lovelace)}
         )
