@@ -9,13 +9,15 @@ import {
 import {Constr, Data, UTxO, Validator, SpendingValidator} from "@lucid-evolution/lucid";
 import {utf8ToHex} from "../src/ultis/ultis";
 
+const helloWorldTitle = "hello_world.hello_world.spend";
+
 async function main() {
-    const scriptAddress = getScriptsAddress(0);
+    const scriptAddress = getScriptsAddress(helloWorldTitle);
     const publicKeyHash = await getPublicKeyHash();
     const utxos = await getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress, publicKeyHash);
     const redeemer = Data.to(new Constr(0, [utf8ToHex("Hello, World!")]));
     const receiveAddress = "addr_test1vpfsn7ncdptvzf3dp9dcnt0kfl522f266xg59jw9xu6eusgmessnp";
-    const spendingValidator = getValidator(0);
+    const spendingValidator = getValidator(helloWorldTitle);
 
     await unlock_assets(
         utxos,

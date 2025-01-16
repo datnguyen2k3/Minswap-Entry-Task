@@ -17,10 +17,10 @@ const DatumVestingScheme = Data.Object({
     beneficiary: Data.Bytes(),
 });
 
-const VestingValidatorIndex = 5;
+const vestingTitle = "vesting.vesting.spend";
 
 export async function lockAssetsToVestingScriptsAddress(amount: bigint): Promise<void> {
-    const vestingScriptAddress = getScriptsAddress(VestingValidatorIndex);
+    const vestingScriptAddress = getScriptsAddress(vestingTitle);
     await lock_assets(
         vestingScriptAddress,
         amount,
@@ -43,7 +43,7 @@ export async function isValidVestingScriptAddressUTxO(utxo: UTxO, publicKeysHash
 }
 
 export async function getVestingScriptAddressUTxOs(): Promise<UTxO[]> {
-    const scriptAddress = getScriptsAddress(VestingValidatorIndex);
+    const scriptAddress = getScriptsAddress(vestingTitle);
     const lucid = await getLucidOgmiosInstance();
     const scriptsAddressUtxos = await lucid.utxosAt(scriptAddress);
     const publicKeyHash = await getPublicKeyHash();
@@ -69,7 +69,7 @@ export async function getVestingScriptAddressUTxOs(): Promise<UTxO[]> {
 export async function unlockAssetsToVestingScriptsAddress(): Promise<void> {
     const utxos = await getVestingScriptAddressUTxOs();
     const receiveAddress = "addr_test1vpfsn7ncdptvzf3dp9dcnt0kfl522f266xg59jw9xu6eusgmessnp"
-    const spendValidator = getValidator(VestingValidatorIndex);
+    const spendValidator = getValidator(vestingTitle);
     const redeemer = Data.to(new Constr(0, [utf8ToHex("Hello, World!")]));
     const amount = BigInt(1000000);
 

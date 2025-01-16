@@ -13,13 +13,15 @@ import {
     validatorToScriptHash
 } from "@lucid-evolution/lucid";
 
+const mintValidatorTitle = "onshot.gift_card.else";
+
 export type Validators = {
   giftCard: string;
 };
 
 export function readValidators(): Validators {
   return {
-    giftCard: getValidator(3).script,
+    giftCard: getValidator(mintValidatorTitle).script,
   };
 }
 

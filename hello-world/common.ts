@@ -10,19 +10,26 @@ import {
 import fs from "node:fs";
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
 
-export function getValidator(validator_index: number): Validator {
+export function getCompliedCode(validator_title: string): string {
     const plutusJson = JSON.parse(fs.readFileSync("plutus.json", "utf8"));
-    const compiledCode = plutusJson.validators[validator_index].compiledCode;
-    const plutusVersion = "PlutusV3";
+    const compiledCode = plutusJson.validators.find((validator: any) => validator.title === validator_title).compiledCode;
 
+    if (!compiledCode) {
+        throw new Error("Compiled code not found");
+    }
+
+    return compiledCode;
+}
+
+export function getValidator(validator_title: string): Validator {
     return {
-        type: plutusVersion,
-        script: compiledCode,
+        type: 'PlutusV3',
+        script: getCompliedCode(validator_title),
     };
 }
 
-export function getScriptsAddress(validator_index: number): string {
-    const validator = getValidator(validator_index);
+export function getScriptsAddress(validator_title: string): string {
+    const validator = getValidator(validator_title);
 
     const scriptAddress = validatorToAddress("Preprod", validator);
     console.log("Script address:", scriptAddress);
