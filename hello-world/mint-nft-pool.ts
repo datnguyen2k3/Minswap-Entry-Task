@@ -2,11 +2,11 @@ import {
     applyDoubleCborEncoding,
     applyParamsToScript,
     Constr, Data,
-    fromText, Script,
+    fromText, Script, UTxO,
     Validator, validatorToAddress,
     validatorToScriptHash
 } from "@lucid-evolution/lucid";
-import {getPrivateKey, getValidator, submitTx} from "./common";
+import {getPrivateKey, getValidator, isCantCastCborToObject, submitTx, toObject} from "./common";
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
 
 const mintNftPoolTitle = "dex.simple_dex.mint"
@@ -22,11 +22,6 @@ export const LiquidityPoolScheme = Data.Object({
     token_amount: Data.Integer(),
     ada_amount: Data.Integer(),
 });
-
-export type LiquidityPool = {
-    token_amount: bigint;
-    ada_amount: bigint;
-}
 
 function readMintValidators(): MintValidators {
     const validator = getValidator(mintNftPoolTitle)
@@ -58,6 +53,11 @@ function readMintValidators(): MintValidators {
         policyId: policyId,
         lockAddress: lockAddress
     }
+}
+
+function getAuthAssetName(): string {
+    const mintValidators = readMintValidators()
+    return `${mintValidators.policyId}${fromText(authLiquidityToken)}`
 }
 
 async function mintAuthToken() {
@@ -104,7 +104,35 @@ async function createLiquidityPoolUTxO() {
     await submitTx(tx, lucid);
 }
 
+async function getLiquidityPoolUTxO(): Promise<UTxO> {
+    const mintValidators = readMintValidators()
+
+    const lucid = await getLucidOgmiosInstance()
+    const utxos = await lucid.utxosAt(mintValidators.lockAddress)
+
+    for (const utxo of utxos) {
+        const asset = utxo.assets[getAuthAssetName()]
+        if (asset === BigInt(1)) {
+            if (utxo.datum) {
+                try {
+                    const datum = toObject(utxo.datum, LiquidityPoolScheme)
+                    console.log("Liquidity Pool UTxO:", datum)
+                } catch (e) {
+                    if (isCantCastCborToObject(e)) {
+                        continue;
+                    }
+                    console.error("Error parsing datum:", e);
+                }
+            }
+            console.log("Liquidity Pool UTxO:", utxo);
+            return utxo;
+        }
+    }
+
+    throw new Error("No Liquidity Pool UTxO found")
+}
 
 
 // mintAuthToken().then(() => console.log("Minted Auth Token")).catch(console.error)
-createLiquidityPoolUTxO().then(() => console.log("Created Liquidity Pool UTxO")).catch(console.error)
+// createLiquidityPoolUTxO().then(() => console.log("Created Liquidity Pool UTxO")).catch(console.error)
+// getLiquidityPoolUTxO().then(() => console.log("Got Liquidity Pool UTxO")).catch(console.error)
