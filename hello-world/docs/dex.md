@@ -5,10 +5,18 @@
 
 
 - The Simple DEX uses Constant Product Formula (x * y = k). This formula, most simply expressed as x * y = k, states that trades must not change the product (k) of a pair’s reserve balances (x and y). Because k remains unchanged from the reference frame of a trade, it is often referred to as the invariant. This formula has the desirable property that larger trades (relative to reserves) execute at exponentially worse rates than smaller ones.
-- This system is provided for trade between one token to ADA token and vice versa. Also, it allows users to deposit/withdraw liquidity to/from the Pool Liquidity UTxO.
-- Dua EUTxO model in Cardano. The Pool Liquidity UTxO is created by the Admin, it is unique and has one 
-  Authen token. The LP 
-  token is minted by the Exchange Contract.
+
+- Functional requirements:
+    - Add liquidity: Users can add liquidity to the Pool Liquidity UTxO and mint LP token.
+    - Remove liquidity: Users can remove liquidity from the Pool Liquidity UTxO by burn LP token.
+    - Swap token: Users can swap token between token and ADA or vice versa.
+
+- Non-functional requirements:
+    - Security: No one can steal the assets in the Pool Liquidity UTxO.
+
+- Limitation:
+    - The Simple DEX only supports trading between trade token and ADA.
+    - Admin can create many Pool Liquidity UTxOs
 
 ## 2. Architecture
 ![Architecture](pics/architecture.png)
@@ -28,6 +36,7 @@ Flow of the system:
 - After the Pool Liquidity UTxO is created, user can use Pool Liquidity UTxO to:
     - Add liquidity to the Pool Liquidity UTxO and mint LP token.
     - Remove liquidity from the Pool Liquidity UTxO and burn LP token.
+    - Swap token to ADA and vice versa.
 
 
 ## 3. Specification
@@ -66,17 +75,29 @@ Responsible for trading between 2 tokens. It uses the Constant Product Formula (
 - Redeemer:
   + `Add`: add liquidity to the Pool Liquidity UTxO and mint LP token.
   + `Remove`: remove liquidity from the Pool Liquidity UTxO and burn LP token.
+  + `SwapToAda`: swap token to ADA.
+  + `SwapToToken`: swap ADA to token.
 - Validation:
-  + Add:
-    * Check if the input UTxO is the same as the Pool Liquidity UTxO.
+  + `Add`:
+    * Check inputs just have one UTxO has one Authen token. Set this UTxO as the Pool Liquidity UTxO.
     * Calculate the amount of token to be added to the Pool Liquidity UTxO
     * Validate the ration between the trade token and ADA in inputs need to equal the ration of Liquidity Pool.
     * Mint LP token to the user by the ration of added Token and reserve token in LP.
-  + Remove:
+  + `Remove`:
     * Check if the input UTxO is the same as the Pool Liquidity UTxO.
     * Calculate the amount of token to be removed to the Pool Liquidity UTxO
     * Validate the ration between the burned LP token and the total supply of LP token equals the ration of the removed token and the reserve token in LP.
     * Burn LP token from the user.
+  + `SwapToAda`:
+    * Check if the input UTxO is the same as the Pool Liquidity UTxO.
+    * Calculate the amount of ADA to be swapped.
+    * Validate the ration between the input trade token amount and trade token reserve equals to the ration between the received ADA amount and ADA reserve.
+    * Swap token to ADA.
+  + `SwapToToken`:
+    * Check if the input UTxO is the same as the Pool Liquidity UTxO.
+    * Calculate the amount of token to be swapped.
+    * Validate the ration between the input ADA amount and ADA reserve equals to the ration between the received trade token amount and trade token reserve.
+    * Swap ADA to token.
 
 ### 3.4 Transactions
 
@@ -163,3 +184,59 @@ Transaction structure:
           + 1 Authen Token
       + Datum:
           + total_supply: `C - c`
+
+#### 3.4.4 Swap Token to ADA
+User swaps token to ADA.
+Transaction structure:
+- Inputs:
+    + User's UTxO:
+      + Datum: none
+      + Value: 
+        + `x` trade token
+    + Pool Liquidity UTxO:
+      + Datum:
+        + total_supply: `C`
+      + Value: 
+        + `X` trade token
+        + `Y` ADA
+        + 1 Authen Token
+    + Redeemer: `SwapToAda`
+- Outputs:
+    + User's UTxO:
+      + Value:
+          + `x/X * Y` ADA
+    + Pool Liquidity UTxO:
+      + Value: 
+          + `X + x` trade token
+          + `Y - x/X * y` ADA
+          + 1 Authen Token
+      + Datum:
+          + total_supply: `C` 
+
+#### 3.4.5 Swap ADA to Token
+User swaps ADA to token.
+Transaction structure:
+- Inputs:
+    + User's UTxO:
+      + Datum: none
+      + Value: 
+        + `y` ADA
+    + Pool Liquidity UTxO:
+      + Datum:
+        + total_supply: `C`
+      + Value: 
+        + `X` trade token
+        + `Y` ADA
+        + 1 Authen Token
+    + Redeemer: `SwapToToken`
+- Outputs:
+    + User's UTxO:
+      + Value:
+          + `y/Y * X` trade token
+    + Pool Liquidity UTxO:
+      + Value: 
+          + `X - y/Y * X` trade token
+          + `Y + y` ADA
+          + 1 Authen Token
+      + Datum:
+          + total_supply: `C`
