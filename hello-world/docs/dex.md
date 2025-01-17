@@ -112,7 +112,7 @@ Transaction structure:
 
 - Mint:
     + Redemeer: `Add`
-    + Token name: LP token
+    + Token name: `LP token`
     + Value: 
         + `min(x/X, y/Y) * C` LP token
 
@@ -126,4 +126,36 @@ Transaction structure:
           + `Y + y` ADA
       + Datum:
           + total_supply: `C + min(x/X, y/Y) * C`
-    
+
+#### 3.4.3 Remove Liquidity
+User removes liquidity from the Pool Liquidity UTxO.
+Transaction structure:
+- Inputs:
+    + User's UTxO:
+      + Datum: none
+      + Value: 
+        + `c` LP token
+    + Pool Liquidity UTxO:
+      + Datum:
+        + total_supply: `C`
+      + Value: 
+        + `X` trade token
+        + `Y` ADA
+- Mint:
+  + Redemeer: `Remove`
+  + Token name: `LP token`
+  + Value: 
+      + `-c` LP token
+
+- Outputs:
+    + User's UTxO:
+      + Value:
+          + `c/C * X` trade token
+          + `c/C * Y` ADA
+          + 0 LP token
+    + Pool Liquidity UTxO:
+      + Value: 
+          + `X - c/C * X` trade token
+          + `Y - c/C * Y` ADA
+      + Datum:
+          + total_supply: `C - c`
