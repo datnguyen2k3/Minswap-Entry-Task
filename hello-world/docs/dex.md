@@ -109,6 +109,7 @@ Transaction structure:
       + Value: 
         + `X` trade token
         + `Y` ADA
+        + 1 Authen Token
 
 - Mint:
     + Redemeer: `Add`
@@ -124,6 +125,7 @@ Transaction structure:
       + Value: 
           + `X + x` trade token
           + `Y + y` ADA
+          + 1 Authen Token
       + Datum:
           + total_supply: `C + min(x/X, y/Y) * C`
 
@@ -141,6 +143,7 @@ Transaction structure:
       + Value: 
         + `X` trade token
         + `Y` ADA
+        + 1 Authen Token
 - Mint:
   + Redemeer: `Remove`
   + Token name: `LP token`
@@ -159,3 +162,4 @@ Transaction structure:
           + `Y - c/C * Y` ADA
       + Datum:
           + total_supply: `C - c`
+          + 1 Authen Token
