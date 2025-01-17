@@ -160,6 +160,6 @@ Transaction structure:
       + Value: 
           + `X - c/C * X` trade token
           + `Y - c/C * Y` ADA
+          + 1 Authen Token
       + Datum:
           + total_supply: `C - c`
-          + 1 Authen Token
