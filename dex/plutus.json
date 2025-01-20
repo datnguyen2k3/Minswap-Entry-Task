@@ -1,0 +1,60 @@
+{
+  "preamble": {
+    "title": "dat/dex",
+    "description": "Aiken contracts for project 'dat/dex'",
+    "version": "0.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.9+2217206"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "authen_minting_policy.authen_minting_policy.mint",
+      "redeemer": {
+        "title": "_r",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "parameters": [
+        {
+          "title": "address_hash",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        }
+      ],
+      "compiledCode": "5901780101003232323232323223225333004323232323253330093370e900018051baa0011323232323253330113014002132533300f3371e6eb8c0400092210a415554485f544f4b454e001533300f3370e00290010991980080080291299980a0008a501332253330133253330143370e9000180a9baa00113371e6eb8c064c058dd50008090b180c180a9baa30183015375460306032602a6ea8008528899802002000980b000980b8008b0b1bad301000116301200132533300d3370e900118071baa00114bd6f7b63009bab3012300f375400264660020026eacc048c04cc04cc04cc04c00c894ccc0440045300103d87a80001323332225333012337220120062a66602466e3c02400c4cdd2a40006602c6e980092f5c02980103d87a8000133006006001375c60200026eacc044004c054008c04c004dd6180800098061baa004375c601c60166ea800458c034c03800cc030008c02c008c02c004c018dd50008a4c26cac6eb80055cd2ab9d5573caae7d5d02ba157441",
+      "hash": "cabe734f2620a22b33eca0d63ac785c812a3515b278953182998818d"
+    },
+    {
+      "title": "authen_minting_policy.authen_minting_policy.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "parameters": [
+        {
+          "title": "address_hash",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        }
+      ],
+      "compiledCode": "5901780101003232323232323223225333004323232323253330093370e900018051baa0011323232323253330113014002132533300f3371e6eb8c0400092210a415554485f544f4b454e001533300f3370e00290010991980080080291299980a0008a501332253330133253330143370e9000180a9baa00113371e6eb8c064c058dd50008090b180c180a9baa30183015375460306032602a6ea8008528899802002000980b000980b8008b0b1bad301000116301200132533300d3370e900118071baa00114bd6f7b63009bab3012300f375400264660020026eacc048c04cc04cc04cc04c00c894ccc0440045300103d87a80001323332225333012337220120062a66602466e3c02400c4cdd2a40006602c6e980092f5c02980103d87a8000133006006001375c60200026eacc044004c054008c04c004dd6180800098061baa004375c601c60166ea800458c034c03800cc030008c02c008c02c004c018dd50008a4c26cac6eb80055cd2ab9d5573caae7d5d02ba157441",
+      "hash": "cabe734f2620a22b33eca0d63ac785c812a3515b278953182998818d"
+    }
+  ],
+  "definitions": {
+    "Data": {
+      "title": "Data",
+      "description": "Any Plutus data."
+    },
+    "VerificationKeyHash": {
+      "title": "VerificationKeyHash",
+      "dataType": "bytes"
+    }
+  }
+}

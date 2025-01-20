@@ -1,9 +1,4 @@
-use aiken/collection/list
-use aiken/collection/dict
-use aiken/crypto.{ScriptHash, VerificationKeyHash}
-use cardano/address.{Address, VerificationKey}
 use cardano/assets.{PolicyId}
-use cardano/transaction.{Input, Output, Transaction}
 
 pub type LiquidityPool {
     token_amount: Int,
@@ -11,9 +6,10 @@ pub type LiquidityPool {
 }
 
 pub type LiquidityAction {
-    Create
     Add
     Remove
+    SwapToAda
+    SwapToToken
 }
 
 pub type Asset {
