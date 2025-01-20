@@ -1,4 +1,4 @@
-import {Script} from "@lucid-evolution/lucid";
+import {Data, Script} from "@lucid-evolution/lucid";
 
 export const AUTH_TOKEN_NAME = "AUTH_TOKEN"
 export const PRIVATE_KEY_PATH = "/home/dat/Desktop/Minswap-Entry-Task/hello-world/me.sk"
@@ -9,3 +9,7 @@ export type MintValidators = {
     policyId: string;
     lockAddress: string;
 }
+
+export const LiquidityPoolInfoScheme =  Data.Object({
+    total_supply: Data.Integer()
+})

@@ -1,8 +1,7 @@
 use cardano/assets.{PolicyId}
 
-pub type LiquidityPool {
-    token_amount: Int,
-    ada_amount: Int,
+pub type LiquidityPoolInfo {
+    total_supply: Int,
 }
 
 pub type LiquidityAction {

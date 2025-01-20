@@ -3,9 +3,9 @@ use aiken/collection/list
 use aiken/math/rational
 use cardano/address.{Address, Script}
 use cardano/assets.{PolicyId, Value}
-use cardano/transaction.{Input, Output}
+use cardano/transaction.{Input, Output, Datum, NoDatum, DatumHash, InlineDatum}
 use env
-use simpledex/types.{Asset}
+use simpledex/types.{Asset, LiquidityPoolInfo}
 
 pub fn get_sum_lovelace_from_inputs(inputs: List<Input>) -> Int {
     let sum_lovelace = list.foldl(
@@ -52,7 +52,21 @@ pub fn validate_minted_token(lp_input: Input, lp_output: Output, trade_token: As
             |> assets.tokens(policy_id)
             |> dict.to_pairs()
 
-    lp_asset_name == env.lp_token_name && lp_asset_amount == added_lovelace
+    expect lp_asset_name == env.lp_token_name
+
+    let input_supply = get_total_supply(lp_input.output.datum)
+    expect input_supply >= 0
+
+    let output_supply = get_total_supply(lp_output.datum)
+    expect output_supply >= 0
+
+    if input_supply == 0 {
+        expect lp_asset_amount == reserved_lovelace
+        output_supply == lp_asset_amount
+    } else {
+        expect lp_asset_amount == input_supply * added_lovelace / reserved_lovelace
+        output_supply == lp_asset_amount + input_supply
+    }
 }
 
 pub fn validate_policy_lp(policy_id: PolicyId, lp_input: Input, lp_output: Output) -> Bool {
@@ -124,4 +138,18 @@ pub fn trade_token_from_output(output: Output, trade_token: Asset) -> Int {
 pub fn trade_token_from_input(input: Input, trade_token: Asset) -> Int {
     let Input { output, .. } = input
     trade_token_from_output(output, trade_token)
+}
+
+pub fn get_total_supply(datum: Datum) -> Int {
+    when datum is {
+        NoDatum -> -1
+        DatumHash(_) -> -1
+        InlineDatum(data) -> {
+            if data is LiquidityPoolInfo {
+                data.total_supply
+            } else {
+                -1
+            }
+        }
+    }
 }
