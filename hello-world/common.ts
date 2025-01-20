@@ -40,9 +40,9 @@ export function getPrivateKey(): string {
     return fs.readFileSync("me.sk", "utf8");
 }
 
-export async function getPublicKeyHash(): Promise<string> {
+export async function getPublicKeyHash(privateKey: string): Promise<string> {
     const lucid = await getLucidOgmiosInstance();
-    lucid.selectWallet.fromPrivateKey(getPrivateKey());
+    lucid.selectWallet.fromPrivateKey(privateKey);
 
 
     const publicKeyHash = getAddressDetails(
