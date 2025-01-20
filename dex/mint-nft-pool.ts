@@ -6,8 +6,8 @@ import {
     Validator, validatorToAddress,
     validatorToScriptHash
 } from "@lucid-evolution/lucid";
-import {getPrivateKey, getValidator, isCantCastCborToObject, submitTx, toObject} from "./common";
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
+import {getPrivateKey, getValidator, isCantCastCborToObject, submitTx, toObject} from "../hello-world/common";
 
 const mintNftPoolTitle = "dex.simple_dex.mint"
 const authLiquidityToken = "AuthLiquidityToken"
@@ -132,7 +132,41 @@ async function getLiquidityPoolUTxO(): Promise<UTxO> {
     throw new Error("No Liquidity Pool UTxO found")
 }
 
+async function addLiquidity() {
+    const testTokenName = "TEST"
+    const mintValidators = readMintValidators()
+
+    const testAssetName = `${mintValidators.policyId}${fromText(testTokenName)}`
+
+    const lucid = await getLucidOgmiosInstance()
+    lucid.selectWallet.fromPrivateKey(getPrivateKey())
+
+    const addRedeemer = Data.to(new Constr(1, []))
+
+    const utxos = await lucid.wallet().getUtxos();
+    const liquidityPoolUTxO = await getLiquidityPoolUTxO();
+    if (!liquidityPoolUTxO.datum) {
+        throw new Error("No Liquidity Pool UTxO found")
+    }
+
+    utxos.push(liquidityPoolUTxO);
+
+    const tx = await lucid
+        .newTx()
+        .collectFrom(utxos, addRedeemer)
+        .attach.MintingPolicy(mintValidators.policyScripts)
+        .mintAssets({[testAssetName]: BigInt(1)}, addRedeemer)
+        .pay.ToContract(
+            mintValidators.lockAddress,
+            {kind: 'inline', value: liquidityPoolUTxO.datum},
+            {[getAuthAssetName()]: BigInt(1)}
+        )
+        .complete();
+
+    await submitTx(tx, lucid);
+}
 
 // mintAuthToken().then(() => console.log("Minted Auth Token")).catch(console.error)
 // createLiquidityPoolUTxO().then(() => console.log("Created Liquidity Pool UTxO")).catch(console.error)
 // getLiquidityPoolUTxO().then(() => console.log("Got Liquidity Pool UTxO")).catch(console.error)
+addLiquidity().then(() => console.log("Created Liquidity")).catch(console.error);
