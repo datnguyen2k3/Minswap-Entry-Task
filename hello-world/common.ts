@@ -8,10 +8,23 @@ import {
     Datum, TxSignBuilder, LucidEvolution, Validator
 } from "@lucid-evolution/lucid";
 import fs from "node:fs";
+import * as path from "path";
 import {getLucidOgmiosInstance} from "../src/lucid-instance";
 
 export function getCompliedCode(validator_title: string): string {
     const plutusJson = JSON.parse(fs.readFileSync("plutus.json", "utf8"));
+    const compiledCode = plutusJson.validators.find((validator: any) => validator.title === validator_title).compiledCode;
+
+    if (!compiledCode) {
+        throw new Error("Compiled code not found");
+    }
+
+    return compiledCode;
+}
+
+export function getCompliedCodeFrom(validator_title: string, pathStr: string): string {
+    const absolutePath = path.resolve(pathStr);
+    const plutusJson = JSON.parse(fs.readFileSync(absolutePath, "utf8"));
     const compiledCode = plutusJson.validators.find((validator: any) => validator.title === validator_title).compiledCode;
 
     if (!compiledCode) {
@@ -28,6 +41,13 @@ export function getValidator(validator_title: string): Validator {
     };
 }
 
+export function getValidatorFrom(validator_title: string, plutusFilePath: string): Validator {
+    return {
+        type: 'PlutusV3',
+        script: getCompliedCodeFrom(validator_title, plutusFilePath),
+    };
+}
+
 export function getScriptsAddress(validator_title: string): string {
     const validator = getValidator(validator_title);
 
@@ -38,6 +58,11 @@ export function getScriptsAddress(validator_title: string): string {
 
 export function getPrivateKey(): string {
     return fs.readFileSync("me.sk", "utf8");
+}
+
+export function getPrivateKeyFrom(path_str: string): string {
+    const absolutePath = path.resolve(path_str);
+    return fs.readFileSync(absolutePath, "utf8");
 }
 
 export async function getPublicKeyHash(privateKey: string): Promise<string> {
