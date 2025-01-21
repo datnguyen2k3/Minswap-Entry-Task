@@ -77,7 +77,10 @@ export async function createLiquidityPoolUTxO() {
         .pay.ToContract(
             mintExchangeValidator.lockAddress,
             {kind: 'inline', value: Data.to(new Constr(0, [BigInt(0)]))},
-            {[authAssetName]: BigInt(1)}
+            {
+                [authAssetName]: BigInt(1),
+                "lovelace": BigInt(0)
+            }
         )
         .complete();
 
