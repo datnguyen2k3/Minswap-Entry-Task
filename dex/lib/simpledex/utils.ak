@@ -45,6 +45,7 @@ pub fn validate_burned_token(lp_input: Input, lp_output: Output, trade_token: As
 
     expect lp_asset_name == env.lp_token_name
     expect lp_asset_amount < 0
+    let burned_lp_token = math.abs(lp_asset_amount)
 
     let input_supply = get_total_supply(lp_input.output.datum)
     expect input_supply > 0
@@ -53,21 +54,27 @@ pub fn validate_burned_token(lp_input: Input, lp_output: Output, trade_token: As
     expect output_supply >= 0
 
     let added_lovelace = get_added_lovelace(lp_input, lp_output)
+    expect added_lovelace < 0
+
     let added_trade_token = get_added_trade_token(lp_input, lp_output, trade_token)
+    expect added_trade_token < 0
+
     let reserved_lovelace = lovelace_from_input(lp_input)
     let reserved_trade_token = trade_token_from_input(lp_input, trade_token)
+    let removed_lovelace = math.abs(added_lovelace)
+    let removed_trade_token = math.abs(added_trade_token)
 
     expect True == validate_rational(
-        added_lovelace, added_trade_token, 
-        reserved_lovelace, reserved_trade_token
+        removed_lovelace, reserved_lovelace, 
+        burned_lp_token, input_supply
     )
 
     expect True == validate_rational(
-        lp_asset_amount, input_supply, 
-        added_lovelace, reserved_lovelace
+        removed_trade_token, reserved_trade_token, 
+        burned_lp_token, input_supply
     )
 
-    output_supply == input_supply - lp_asset_amount
+    output_supply == input_supply - burned_lp_token
 }
 
 pub fn validate_minted_token(lp_input: Input, lp_output: Output, trade_token: Asset, mint: Value, policy_id: PolicyId) -> Bool {

@@ -36,11 +36,11 @@ export function readMintValidators(validator_title: string, plutusPath: string, 
     }
 }
 
-export function  validateAddedLiquidity(addedLovelace: bigint, addedTradeToken: bigint, reservedLovelace: bigint, reservedTradeToken: bigint): boolean {
-    const x1 = Number(addedLovelace)
-    const y1 = Number(addedTradeToken)
-    const x2 = Number(reservedLovelace)
-    const y2 = Number(reservedTradeToken)
+export function  isEqualRational(a1: bigint, b1: bigint, a2: bigint, b2: bigint): boolean {
+    const x1 = Number(a1)
+    const y1 = Number(b1)
+    const x2 = Number(a2)
+    const y2 = Number(b2)
 
     console.log("x1/y1:", x1 / y1)
     console.log("x2/y2:", x2 / y2)

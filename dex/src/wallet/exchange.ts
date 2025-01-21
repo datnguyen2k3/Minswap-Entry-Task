@@ -1,9 +1,10 @@
 import {
+    createLiquidityPoolUTxO,
     getLiquidityPoolUTxO,
     getMintAuthValidator,
     getMintExchangeValidator,
     MIN_TOKEN_NAME,
-    MIN_TOKEN_POLICY_ID
+    MIN_TOKEN_POLICY_ID, mintAuthToken
 } from "./admin-functions";
 import {Constr, Data, fromText, LucidEvolution, Redeemer, UTxO} from "@lucid-evolution/lucid";
 import {getPrivateKey, getPrivateKeyFrom, submitTx, toObject} from "../../../hello-world/common";
@@ -15,7 +16,7 @@ import {
     PRIVATE_KEY_PATH
 } from "../types";
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
-import {validateAddedLiquidity} from "../utils";
+import {isEqualRational} from "../utils";
 
 class Exchange {
     private readonly lucid: LucidEvolution;
@@ -25,6 +26,7 @@ class Exchange {
     private readonly lpAssetName: string;
     private readonly authAssetName: string;
     public static readonly ADD_REDEEMER: Redeemer = Data.to(new Constr(0, []));
+    public static readonly REMOVE_REDEEMER: Redeemer = Data.to(new Constr(1, []));
 
     constructor(lucid: LucidEvolution, mintExchangeValidator: MintValidators, mintAuthValidator: MintValidators) {
         this.lucid = lucid;
@@ -50,7 +52,6 @@ class Exchange {
         return lpInfo.total_supply;
     }
 
-
     public async addLiquidity(addedLovelace: bigint) {
         const lpUTxO = await getLiquidityPoolUTxO(this.lucid);
         const lpTokenSupply = await Exchange.getTotalSupply(lpUTxO);
@@ -64,7 +65,7 @@ class Exchange {
             const addedTradeToken = BigInt(addedLovelace) * BigInt(reservedTradeToken) / reservedLovelace;
             console.log("Added trade token:", addedTradeToken);
 
-            const isValidAddedTradeToken = validateAddedLiquidity(
+            const isValidAddedTradeToken = isEqualRational(
                 addedTradeToken,
                 addedLovelace,
                 reservedTradeToken,
@@ -141,8 +142,68 @@ class Exchange {
 
         await submitTx(tx, lucid);
     }
+
+    public async removeLiquidity(burnedLpToken: bigint) {
+        console.log("Burned LP token:", burnedLpToken);
+        const lpUTxO = await getLiquidityPoolUTxO(this.lucid);
+        const lpTokenSupply = await Exchange.getTotalSupply(lpUTxO);
+
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
+
+        const removedLovelace = BigInt(burnedLpToken) * reservedLovelace / lpTokenSupply;
+        console.log("Received lovelace:", removedLovelace);
+        const removedTradeToken = BigInt(burnedLpToken) * reservedTradeToken / lpTokenSupply;
+        console.log("Received trade token:", removedTradeToken);
+
+        if (!isEqualRational(removedLovelace, reservedLovelace, burnedLpToken, lpTokenSupply)) {
+            throw new Error("Invalid removed lovelace");
+        }
+
+        if (!isEqualRational(removedTradeToken, reservedTradeToken, burnedLpToken, lpTokenSupply)) {
+            throw new Error("Invalid removed trade token");
+        }
+
+        const inputUTxOs = await this.lucid.wallet().getUtxos();
+        inputUTxOs.push(lpUTxO);
+
+        const tx = await this.lucid
+            .newTx()
+            .collectFrom(inputUTxOs, Exchange.REMOVE_REDEEMER)
+            .attach.MintingPolicy(this.mintExchangeValidator.policyScripts)
+            .attach.SpendingValidator(this.mintExchangeValidator.policyScripts)
+            .mintAssets(
+                {[this.lpAssetName]: -burnedLpToken},
+                Exchange.REMOVE_REDEEMER
+            )
+            .pay.ToContract(
+                this.mintExchangeValidator.lockAddress,
+                {
+                    kind: 'inline',
+                    value: Data.to(new Constr(0, [BigInt(lpTokenSupply) - burnedLpToken]))
+                }, {
+                    lovelace: reservedLovelace - removedLovelace,
+                    [this.authAssetName]: BigInt(1),
+                    [this.tradeAssetName]: reservedTradeToken - removedTradeToken
+                }
+            )
+            .pay.ToAddress(
+                await this.lucid.wallet().address(),
+                {
+                    lovelace: removedLovelace,
+                    [this.tradeAssetName]: removedTradeToken
+                }
+            )
+            .complete();
+
+        await submitTx(tx, this.lucid);
+    }
 }
 
-Exchange.getInstance(getPrivateKeyFrom(PRIVATE_KEY_PATH)).then(async exchange => {
-    await exchange.addLiquidity(BigInt(10000000));
-})
+// mintAuthToken().then(() => console.log("Auth token minted successfully"));
+// createLiquidityPoolUTxO().then(() => console.log("Liquidity pool UTxO created successfully"));
+
+// Exchange.getInstance(getPrivateKeyFrom(PRIVATE_KEY_PATH)).then(async exchange => {
+//     await exchange.addLiquidity(BigInt(1200000));
+//     await exchange.removeLiquidity(BigInt(103400));
+// });
