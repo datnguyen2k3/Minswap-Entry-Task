@@ -27,7 +27,7 @@ export async function lockAssetsToVestingScriptsAddress(amount: bigint): Promise
         toCBOR(
             {
                 lock_until: BigInt(50),
-                beneficiary: await getPublicKeyHash(getPrivateKey()),
+                beneficiary: await getPublicKeyHash(getPrivateKey(), await getLucidOgmiosInstance()),
             },
             DatumVestingScheme
         )
@@ -46,7 +46,7 @@ export async function getVestingScriptAddressUTxOs(): Promise<UTxO[]> {
     const scriptAddress = getScriptsAddress(vestingTitle);
     const lucid = await getLucidOgmiosInstance();
     const scriptsAddressUtxos = await lucid.utxosAt(scriptAddress);
-    const publicKeyHash = await getPublicKeyHash(getPrivateKey());
+    const publicKeyHash = await getPublicKeyHash(getPrivateKey(), await getLucidOgmiosInstance());
     const utxos: UTxO[] = [];
 
     for (const utxo of scriptsAddressUtxos) {

@@ -9,7 +9,7 @@ const DatumScheme1 = Data.Object({
 const helloWorldTitle = "hello_world.hello_world.spend";
 
 async function main(): Promise<void> {
-    const datum = toCBOR({owner: await getPublicKeyHash(getPrivateKey())}, DatumScheme1);
+    const datum = toCBOR({owner: await getPublicKeyHash(getPrivateKey(), await getLucidOgmiosInstance())}, DatumScheme1);
     const scriptAddress = getScriptsAddress(helloWorldTitle);
     await lock_assets(scriptAddress, BigInt(1000000), datum);
 }
