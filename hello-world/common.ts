@@ -86,7 +86,11 @@ export function toCBOR(data: Object, DataSchema: any): Datum {
     return Data.to<SchemeType>(data, SchemeType);
 }
 
-export function toObject(datum: Datum, DataSchema: any): any {
+export function toObject(datum: Datum | undefined | null, DataSchema: any): any {
+    if (!datum) {
+        throw new Error("Datum is undefined");
+    }
+
     type SchemeType = Data.Static<typeof DataSchema>;
     const SchemeType = DataSchema as unknown as SchemeType;
     return Data.from(datum, SchemeType);
