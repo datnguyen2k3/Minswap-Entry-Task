@@ -76,7 +76,6 @@ export async function getPublicKeyHash(privateKey: string, lucid: LucidEvolution
         throw new Error("Unable to retrieve publicKeyHash from the wallet address");
     }
 
-    console.log("Public key hash:", publicKeyHash);
     return publicKeyHash;
 }
 

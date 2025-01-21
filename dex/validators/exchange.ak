@@ -32,7 +32,6 @@ validator exchange(trade_token: Asset, auth_token: Asset) {
 pub fn add_liquidity(trade_token: Asset, policy_id: PolicyId, self: Transaction, auth_token: Asset) -> Bool {
     let lp_input = utils.find_liquidity_pool_input(self.inputs, auth_token)
     let lp_output = utils.find_liquidity_pool_output(self.outputs, auth_token)
-
     expect True == utils.validate_policy_lp(policy_id, lp_input, lp_output)
     utils.validate_minted_token(lp_input, lp_output, trade_token, self.mint, policy_id)
 }

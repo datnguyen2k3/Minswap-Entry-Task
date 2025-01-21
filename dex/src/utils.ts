@@ -35,3 +35,16 @@ export function readMintValidators(validator_title: string, plutusPath: string, 
         lockAddress: lockAddress
     }
 }
+
+export function  validateAddedLiquidity(addedLovelace: bigint, addedTradeToken: bigint, reservedLovelace: bigint, reservedTradeToken: bigint): boolean {
+    const x1 = Number(addedLovelace)
+    const y1 = Number(addedTradeToken)
+    const x2 = Number(reservedLovelace)
+    const y2 = Number(reservedTradeToken)
+
+    console.log("x1/y1:", x1 / y1)
+    console.log("x2/y2:", x2 / y2)
+
+
+    return 100 * Math.abs(x1 * y2 - y1 * x2) <= y1 * y2
+}

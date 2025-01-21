@@ -1,6 +1,6 @@
 use aiken/collection/dict
 use aiken/collection/list
-use aiken/math/rational
+use aiken/math
 use cardano/address.{Address, Script}
 use cardano/assets.{PolicyId, Value}
 use cardano/transaction.{Input, Output, Datum, NoDatum, DatumHash, InlineDatum}
@@ -38,15 +38,6 @@ pub fn get_added_trade_token(lp_input: Input, lp_output: Output, trade_token: As
 }
 
 pub fn validate_minted_token(lp_input: Input, lp_output: Output, trade_token: Asset, mint: Value, policy_id: PolicyId) -> Bool {
-    let added_lovelace = get_added_lovelace(lp_input, lp_output)
-    let added_trade_token = get_added_trade_token(lp_input, lp_output, trade_token)
-    let reserved_lovelace = lovelace_from_input(lp_input)
-    let reserved_trade_token = trade_token_from_input(lp_input, trade_token)
-    
-    expect Some(added_rational) = rational.new(added_lovelace, added_trade_token)
-    expect Some(reserved_rational) = rational.new(reserved_lovelace, reserved_trade_token)
-    expect rational.compare(added_rational, reserved_rational) == Equal
-
     expect [Pair(lp_asset_name, lp_asset_amount)] =
         mint
             |> assets.tokens(policy_id)
@@ -59,14 +50,28 @@ pub fn validate_minted_token(lp_input: Input, lp_output: Output, trade_token: As
 
     let output_supply = get_total_supply(lp_output.datum)
     expect output_supply >= 0
-
+    
+    let added_lovelace = get_added_lovelace(lp_input, lp_output)
+    let added_trade_token = get_added_trade_token(lp_input, lp_output, trade_token)
+    let reserved_lovelace = lovelace_from_input(lp_input)
+    let reserved_trade_token = trade_token_from_input(lp_input, trade_token)
+    
     if input_supply == 0 {
-        expect lp_asset_amount == reserved_lovelace
+        expect lp_asset_amount == 1000000
         output_supply == lp_asset_amount
     } else {
+        expect True == validate_rational_added_liquidity(
+            added_lovelace, added_trade_token, 
+            reserved_lovelace, reserved_trade_token
+        )
+
         expect lp_asset_amount == input_supply * added_lovelace / reserved_lovelace
         output_supply == lp_asset_amount + input_supply
     }
+}
+
+pub fn validate_rational_added_liquidity(added_lovelace: Int, added_trade_token: Int, reserved_lovelace: Int, reserved_trade_token: Int) -> Bool {
+    100 * math.abs(added_lovelace * reserved_trade_token - added_trade_token * reserved_lovelace) <= added_trade_token * reserved_trade_token
 }
 
 pub fn validate_policy_lp(policy_id: PolicyId, lp_input: Input, lp_output: Output) -> Bool {
