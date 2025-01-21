@@ -37,6 +37,39 @@ pub fn get_added_trade_token(lp_input: Input, lp_output: Output, trade_token: As
     trade_token_from_output(lp_output, trade_token) - trade_token_from_input(lp_input, trade_token)
 }
 
+pub fn validate_burned_token(lp_input: Input, lp_output: Output, trade_token: Asset, mint: Value, policy_id: PolicyId) -> Bool {
+    expect [Pair(lp_asset_name, lp_asset_amount)] =
+        mint
+            |> assets.tokens(policy_id)
+            |> dict.to_pairs()
+
+    expect lp_asset_name == env.lp_token_name
+    expect lp_asset_amount < 0
+
+    let input_supply = get_total_supply(lp_input.output.datum)
+    expect input_supply > 0
+
+    let output_supply = get_total_supply(lp_output.datum)
+    expect output_supply >= 0
+
+    let added_lovelace = get_added_lovelace(lp_input, lp_output)
+    let added_trade_token = get_added_trade_token(lp_input, lp_output, trade_token)
+    let reserved_lovelace = lovelace_from_input(lp_input)
+    let reserved_trade_token = trade_token_from_input(lp_input, trade_token)
+
+    expect True == validate_rational(
+        added_lovelace, added_trade_token, 
+        reserved_lovelace, reserved_trade_token
+    )
+
+    expect True == validate_rational(
+        lp_asset_amount, input_supply, 
+        added_lovelace, reserved_lovelace
+    )
+
+    output_supply == input_supply - lp_asset_amount
+}
+
 pub fn validate_minted_token(lp_input: Input, lp_output: Output, trade_token: Asset, mint: Value, policy_id: PolicyId) -> Bool {
     expect [Pair(lp_asset_name, lp_asset_amount)] =
         mint
@@ -60,7 +93,7 @@ pub fn validate_minted_token(lp_input: Input, lp_output: Output, trade_token: As
         expect lp_asset_amount == 1000000
         output_supply == lp_asset_amount
     } else {
-        expect True == validate_rational_added_liquidity(
+        expect True == validate_rational(
             added_lovelace, added_trade_token, 
             reserved_lovelace, reserved_trade_token
         )
@@ -70,8 +103,8 @@ pub fn validate_minted_token(lp_input: Input, lp_output: Output, trade_token: As
     }
 }
 
-pub fn validate_rational_added_liquidity(added_lovelace: Int, added_trade_token: Int, reserved_lovelace: Int, reserved_trade_token: Int) -> Bool {
-    100 * math.abs(added_lovelace * reserved_trade_token - added_trade_token * reserved_lovelace) <= added_trade_token * reserved_trade_token
+pub fn validate_rational(x1: Int, y1: Int, x2: Int, y2: Int) -> Bool {
+    100 * math.abs(x1 * y2 - x2 * y1) <= y1 * y2
 }
 
 pub fn validate_policy_lp(policy_id: PolicyId, lp_input: Input, lp_output: Output) -> Bool {
