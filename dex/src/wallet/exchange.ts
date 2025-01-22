@@ -17,6 +17,7 @@ import {
 } from "../types";
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
 import {isEqualRational} from "../utils";
+import {BI} from "cbor/types/lib/constants";
 
 class Exchange {
     private readonly lucid: LucidEvolution;
@@ -209,7 +210,7 @@ class Exchange {
         const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
         const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
 
-        const receivedLovelace = swappedTradeToken * reservedLovelace / (reservedTradeToken + swappedTradeToken);
+        const receivedLovelace = swappedTradeToken * reservedLovelace * BigInt(1000) / ((reservedTradeToken + swappedTradeToken) * BigInt(997));
         console.log("Received lovelace:", receivedLovelace);
 
         const inputUTxOs = await this.lucid.wallet().getUtxos();
@@ -249,7 +250,7 @@ class Exchange {
         const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
         const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
 
-        const receivedTradeToken = swappedLovelace * reservedTradeToken / (reservedLovelace + swappedLovelace);
+        const receivedTradeToken = swappedLovelace * reservedTradeToken * BigInt(1000) / ((reservedLovelace + swappedLovelace) * BigInt(997));
         console.log("Received trade token:", receivedTradeToken);
 
         const inputUTxOs = await this.lucid.wallet().getUtxos();
@@ -282,11 +283,11 @@ class Exchange {
     }
 }
 
-// mintAuthToken().then(() => console.log("Auth token minted successfully"));
-// createLiquidityPoolUTxO().then(() => console.log("Liquidity pool UTxO created successfully"));
-Exchange.getInstance(getPrivateKeyFrom(PRIVATE_KEY_PATH)).then(async exchange => {
-    // await exchange.addLiquidity(BigInt(1200000));
-    // await exchange.removeLiquidity(BigInt(103400));
-    // await exchange.swapToAda(BigInt(5000));
-    // await exchange.swapToToken(BigInt(103201));
-});
+// // mintAuthToken().then(() => console.log("Auth token minted successfully"));
+// // createLiquidityPoolUTxO().then(() => console.log("Liquidity pool UTxO created successfully"));
+// Exchange.getInstance(getPrivateKeyFrom(PRIVATE_KEY_PATH)).then(async exchange => {
+//     // await exchange.addLiquidity(BigInt(1555000));
+//     // await exchange.removeLiquidity(BigInt(103400));
+//     // await exchange.swapToAda(BigInt(50000));
+//     // await exchange.swapToToken(BigInt(103201));
+// });
