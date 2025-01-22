@@ -128,6 +128,24 @@ pub fn validate_swap_to_ada(lp_input: Input, lp_output: Output, trade_token: Ass
     removed_lovelace == added_trade_token * reserved_lovelace / (reserved_trade_token + added_trade_token)
 }
 
+pub fn validate_swap_to_token(lp_input: Input, lp_output: Output, trade_token: Asset) -> Bool {
+    let input_supply = get_total_supply(lp_input.output.datum)
+    let output_supply = get_total_supply(lp_output.datum)
+    expect input_supply == output_supply
+
+    let added_lovelace = get_added_lovelace(lp_input, lp_output)
+    expect added_lovelace > 0
+
+    let added_trade_token = get_added_trade_token(lp_input, lp_output, trade_token)
+    expect added_trade_token < 0
+
+    let removed_trade_token = math.abs(added_trade_token)
+    let reserved_lovelace = lovelace_from_input(lp_input)
+    let reserved_trade_token = trade_token_from_input(lp_input, trade_token)
+    
+    removed_trade_token == added_lovelace * reserved_trade_token / (reserved_lovelace + added_lovelace)
+}
+
 pub fn validate_rational(x1: Int, y1: Int, x2: Int, y2: Int) -> Bool {
     100 * math.abs(x1 * y2 - x2 * y1) <= y1 * y2
 }

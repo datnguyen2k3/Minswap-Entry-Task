@@ -2,7 +2,7 @@ use aiken/collection/list
 use cardano/address.{Script}
 use cardano/assets.{PolicyId}
 use cardano/transaction.{Transaction, Input,OutputReference}
-use simpledex/types.{Asset, LiquidityAction, Add, Remove, SwapToAda}
+use simpledex/types.{Asset, LiquidityAction, Add, Remove, SwapToAda, SwapToToken}
 use simpledex/utils
 
 validator exchange(trade_token: Asset, auth_token: Asset) {
@@ -16,7 +16,7 @@ validator exchange(trade_token: Asset, auth_token: Asset) {
             Add -> add_liquidity(trade_token, policy_id, self, auth_token)
             Remove -> remove_liquidity(trade_token, policy_id, self, auth_token)
             SwapToAda -> swap_to_ada(trade_token, policy_id, self, auth_token)
-            _ -> False
+            SwapToToken -> swap_to_token(trade_token, policy_id, self, auth_token)
         }
     }
 
@@ -48,4 +48,11 @@ pub fn swap_to_ada(trade_token: Asset, policy_id: PolicyId, self: Transaction, a
     let lp_output = utils.find_liquidity_pool_output(self.outputs, auth_token)
     expect True == utils.validate_policy_lp(policy_id, lp_input, lp_output)
     utils.validate_swap_to_ada(lp_input, lp_output, trade_token)
+}
+
+pub fn swap_to_token(trade_token: Asset, policy_id: PolicyId, self: Transaction, auth_token: Asset) -> Bool {
+    let lp_input = utils.find_liquidity_pool_input(self.inputs, auth_token)
+    let lp_output = utils.find_liquidity_pool_output(self.outputs, auth_token)
+    expect True == utils.validate_policy_lp(policy_id, lp_input, lp_output)
+    utils.validate_swap_to_token(lp_input, lp_output, trade_token)
 }
