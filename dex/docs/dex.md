@@ -275,21 +275,21 @@ Transaction structure:
         + 1 Authen Token
       + Redeemer: `SwapToToken`
 
-- Outputs: // TODO
+- Outputs:
     + User's UTxO:
       + Value:
-          + `y` token B
+          + `z * X2 * 1000 / (997 * (Y2 + y)` token B
     + Pool Liquidity UTxO of token A:
       + Value: 
           + `X1 + x` token A
-          + `Y1 - x/X1 * y` ADA
+          + `z` ADA (`z = x * Y1 * 1000 / (997 * (X1 + x))`)
           + 1 Authen Token
       + Datum:
           + total_supply: `C1` 
     + Pool Liquidity UTxO of token B:
       + Value: 
-          + `X2 - y/Y2 * X2` token B
-          + `Y2 + y` ADA
+          + `X2 - z * X2 * 1000 / (997 * (Y2 + y))` token B
+          + `Y2 + z` ADA
           + 1 Authen Token
       + Datum:
           + total_supply: `C2`
