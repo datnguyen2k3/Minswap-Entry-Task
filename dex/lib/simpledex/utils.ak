@@ -150,17 +150,17 @@ pub fn validate_rational(x1: Int, y1: Int, x2: Int, y2: Int) -> Bool {
     100 * math.abs(x1 * y2 - x2 * y1) <= y1 * y2
 }
 
-pub fn validate_policy_lp(policy_id: PolicyId, lp_input: Input, lp_output: Output) -> Bool {
-    expect Script(input_policy_id) = lp_input.output.address.payment_credential
-    expect Script(output_policy_id) = lp_output.address.payment_credential
-    input_policy_id == policy_id && output_policy_id == policy_id
-}
-
-pub fn find_liquidity_pool_input(inputs: List<Input>, auth_asset: Asset) -> Input {
+pub fn find_liquidity_pool_input(inputs: List<Input>, auth_asset: Asset, policy_id: PolicyId) -> Input {
     let authInputs = list.filter(
         inputs,
         fn(input) {
-            is_input_has_auth_asset(input, auth_asset)
+            let credential = input.output.address.payment_credential
+            when credential is {
+                Script(output_policy_id) -> {
+                    is_input_has_auth_asset(input, auth_asset) && output_policy_id == policy_id
+                }
+                _ -> False
+            }
         }
     )
 
@@ -169,11 +169,17 @@ pub fn find_liquidity_pool_input(inputs: List<Input>, auth_asset: Asset) -> Inpu
     authInput
 }
 
-pub fn find_liquidity_pool_output(outputs: List<Output>, auth_asset: Asset) -> Output {
+pub fn find_liquidity_pool_output(outputs: List<Output>, auth_asset: Asset, policy_id: PolicyId) -> Output {
     let authOutputs = list.filter(
         outputs,
         fn(output) {
-            is_output_has_auth_asset(output, auth_asset)
+            let credential = output.address.payment_credential
+            when credential is {
+                Script(output_policy_id) -> {
+                    is_output_has_auth_asset(output, auth_asset) && output_policy_id == policy_id
+                }
+                _ -> False
+            }
         }
     )
 

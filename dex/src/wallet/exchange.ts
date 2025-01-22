@@ -1,22 +1,14 @@
-import {
-    createLiquidityPoolUTxO,
-    getLiquidityPoolUTxO,
-    getMintAuthValidator,
-    getMintExchangeValidator,
-    MIN_TOKEN_NAME,
-    MIN_TOKEN_POLICY_ID, mintAuthToken
-} from "./admin-functions";
 import {Constr, Data, fromText, LucidEvolution, Redeemer, UTxO} from "@lucid-evolution/lucid";
-import {getPrivateKey, getPrivateKeyFrom, getPublicKeyHash, submitTx, toObject} from "../../../hello-world/common";
+import {getPrivateKeyFrom, getPublicKeyHash, submitTx, toObject} from "../../../hello-world/common";
 import {
     AUTH_TOKEN_NAME,
     INIT_LP_TOKEN_AMOUNT,
-    LiquidityPoolInfoScheme,
-    LP_TOKEN_NAME, MintValidators,
+    LIQUIDITY_POOL_INFO_SCHEME,
+    LP_TOKEN_NAME, MIN_TOKEN_NAME, MIN_TOKEN_POLICY_ID, MintValidators,
     PRIVATE_KEY_PATH
 } from "../types";
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
-import {isEqualRational} from "../utils";
+import {getLiquidityPoolUTxO, getMintAuthValidator, getMintExchangeValidator, isEqualRational} from "../utils";
 
 class Exchange {
     private readonly lucid: LucidEvolution;
@@ -32,25 +24,25 @@ class Exchange {
     public static readonly SWAP_TO_ADA_REDEEMER: Redeemer = Data.to(new Constr(2, []));
     public static readonly SWAP_TO_TOKEN_REDEEMER: Redeemer = Data.to(new Constr(3, []));
 
-    constructor(lucid: LucidEvolution, adminPublicKeyHash: string) {
+    constructor(lucid: LucidEvolution, adminPublicKeyHash: string, tradeTokenPolicyId: string, tradeTokenName: string) {
         this.lucid = lucid;
-        this.mintExchangeValidator = getMintExchangeValidator(adminPublicKeyHash);
+        this.mintExchangeValidator = getMintExchangeValidator(adminPublicKeyHash, tradeTokenPolicyId, tradeTokenName);
         this.mintAuthValidator = getMintAuthValidator(adminPublicKeyHash);
         this.adminPublicKeyHash = adminPublicKeyHash;
-        this.tradeAssetName = `${MIN_TOKEN_POLICY_ID}${fromText(MIN_TOKEN_NAME)}`;
+        this.tradeAssetName = `${tradeTokenPolicyId}${fromText(tradeTokenName)}`;
         this.lpAssetName = `${this.mintExchangeValidator.policyId}${fromText(LP_TOKEN_NAME)}`;
         this.authAssetName = `${this.mintAuthValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
     }
 
-    public static async getInstance(privateKey: string, adminPublicKeyHash: string) {
+    public static async getInstance(privateKey: string, adminPublicKeyHash: string, tradeTokenPolicyId: string, tradeTokenName: string) {
         const lucid = await getLucidOgmiosInstance();
         lucid.selectWallet.fromPrivateKey(privateKey);
 
-        return new Exchange(lucid, adminPublicKeyHash);
+        return new Exchange(lucid, adminPublicKeyHash, tradeTokenPolicyId, tradeTokenName);
     }
 
     public static async getTotalSupply(lpUTxO: UTxO) {
-        const lpInfo = toObject(lpUTxO.datum, LiquidityPoolInfoScheme);
+        const lpInfo = toObject(lpUTxO.datum, LIQUIDITY_POOL_INFO_SCHEME);
         return lpInfo.total_supply;
     }
 
@@ -282,12 +274,20 @@ class Exchange {
     }
 }
 
+const privateKey = getPrivateKeyFrom(PRIVATE_KEY_PATH);
 
-// mintAuthToken().then(() => console.log("Auth token minted successfully"));
-// createLiquidityPoolUTxO().then(() => console.log("Liquidity pool UTxO created successfully"));
-// Exchange.getInstance(getPrivateKeyFrom(PRIVATE_KEY_PATH), getPublicKeyHash(getPrivateKeyFrom(PRIVATE_KEY_PATH))).then(async exchange => {
+// mintAuthToken(privateKey).then(() => console.log("Auth token minted successfully"));
+// createLiquidityPoolUTxO(privateKey).then(() => console.log("Liquidity pool UTxO created successfully"));
+
+
+// Exchange.getInstance(
+//     privateKey,
+//     getPublicKeyHash(privateKey),
+//     MIN_TOKEN_POLICY_ID,
+//     MIN_TOKEN_NAME
+// ).then(async exchange => {
 //     // await exchange.addLiquidity(BigInt(1555000));
 //     // await exchange.removeLiquidity(BigInt(103400));
-//     // await exchange.swapToAda(BigInt(50000));
+//     await exchange.swapToAda(BigInt(50000));
 //     // await exchange.swapToToken(BigInt(103201));
 // });
