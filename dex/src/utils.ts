@@ -90,22 +90,3 @@ export function getMintExchangeValidator(adminPublicKeyHash: string, tradeAsset?
         [tradeTokenAsset, authTokenAsset]
     );
 }
-
-export async function getLiquidityPoolUTxO(lucid: LucidEvolution, adminPublicKeyHash: string) {
-    const mintAuthValidators = getMintAuthValidator(adminPublicKeyHash);
-    const mintExchangeValidator = getMintExchangeValidator(adminPublicKeyHash);
-
-    const authAssetName = `${mintAuthValidators.policyId}${fromText(AUTH_TOKEN_NAME)}`;
-
-    const utxos = await lucid.utxosAt(mintExchangeValidator.lockAddress);
-    for (const utxo of utxos) {
-        if (utxo.datum && utxo.assets[authAssetName] === BigInt(1)) {
-            console.log("Liquidity pool UTxO:", utxo);
-            const lpInfo = toObject(utxo.datum, LIQUIDITY_POOL_INFO_SCHEME);
-            console.log("Liquidity pool info:", lpInfo);
-            return utxo;
-        }
-    }
-
-    throw new Error("Liquidity pool UTxO not found");
-}
