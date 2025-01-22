@@ -310,26 +310,28 @@ class Exchange {
     }
 
     public async swapTradeTokenToOtherToken(swappedTradeToken: bigint, otherAsset: Asset) {
+        console.log("Swapped trade token:", swappedTradeToken);
         const lucid = await this.getLucid();
         const tradeTokenLpUTxO = await Exchange.getLiquidityPoolUTxO(lucid, this.adminPublicKeyHash, this.tradeAsset);
         const swappedLovelace = Exchange.getReceivedLovelace(tradeTokenLpUTxO, swappedTradeToken, this.tradeAssetName);
 
+        const otherAssetName = `${otherAsset.policyId}${fromText(otherAsset.tokenName)}`;
         const otherTokenLpUTxO = await Exchange.getLiquidityPoolUTxO(lucid, this.adminPublicKeyHash, otherAsset);
-        const receivedOtherToken = Exchange.getReceivedTradeToken(otherTokenLpUTxO, swappedLovelace, otherAsset.tokenName);
+        const receivedOtherToken = Exchange.getReceivedTradeToken(otherTokenLpUTxO, swappedLovelace, otherAssetName);
+        console.log("Received other token:", receivedOtherToken);
 
         const tradeContractAddress = this.mintExchangeValidator.lockAddress;
-        const otherContractAddress = getMintExchangeValidator(this.adminPublicKeyHash, otherAsset).lockAddress;
-
-        const otherAssetName = `${otherAsset.policyId}${fromText(otherAsset.tokenName)}`;
+        const otherTrashValidator = getMintExchangeValidator(this.adminPublicKeyHash, otherAsset);
+        const otherContractAddress = otherTrashValidator.lockAddress;
 
         const inputUTxOs = await lucid.wallet().getUtxos();
-        inputUTxOs.push(tradeTokenLpUTxO);
 
         const tx = await lucid
             .newTx()
-            .collectFrom(inputUTxOs, Exchange.SWAP_TO_ADA_REDEEMER)
+            .collectFrom(inputUTxOs.concat(tradeTokenLpUTxO), Exchange.SWAP_TO_ADA_REDEEMER)
             .collectFrom([otherTokenLpUTxO], Exchange.SWAP_TO_TOKEN_REDEEMER)
             .attach.SpendingValidator(this.mintExchangeValidator.policyScripts)
+            .attach.SpendingValidator(otherTrashValidator.policyScripts)
             .pay.ToContract(
                 tradeContractAddress,
                 {
@@ -349,7 +351,7 @@ class Exchange {
                 }, {
                     [this.authAssetName]: BigInt(1),
                     lovelace: otherTokenLpUTxO.assets["lovelace"] + swappedLovelace,
-                    [otherAsset.tokenName]: otherTokenLpUTxO.assets[otherAssetName] - receivedOtherToken,
+                    [otherAssetName]: otherTokenLpUTxO.assets[otherAssetName] - receivedOtherToken,
                 }
             )
             .complete();
@@ -360,22 +362,45 @@ class Exchange {
 
 function main() {
     const privateKey = getPrivateKeyFrom(PRIVATE_KEY_PATH);
-    const exchange = new Exchange(
+
+    const minAsset: Asset = {
+        policyId: MIN_TOKEN_POLICY_ID,
+        tokenName: MIN_TOKEN_NAME
+    }
+
+    const trashAsset: Asset = {
+        policyId: "0f6b02150cbcc7fedafa388abcc41635a9443afb860100099ba40f07",
+        tokenName: "TRASH_TOKEN"
+    }
+
+    const minExchange = new Exchange(
         privateKey,
         getPublicKeyHash(privateKey),
-        {
-            policyId: MIN_TOKEN_POLICY_ID,
-            tokenName: MIN_TOKEN_NAME
-        }
+        minAsset
     )
 
-    mintAuthToken(privateKey).then(() => console.log("Auth token minted successfully"));
-    createLiquidityPoolUTxO(privateKey).then(() => console.log("Liquidity pool UTxO created successfully"));
+    const trashExchange = new Exchange(
+        privateKey,
+        getPublicKeyHash(privateKey),
+        trashAsset
+    )
 
-    exchange.addLiquidity(BigInt(1555000)).then(() => console.log("Liquidity added successfully"));
-    exchange.removeLiquidity(BigInt(103400)).then(() => console.log("Liquidity removed successfully"));
-    exchange.swapTradeTokenToAda(BigInt(50000)).then(() => console.log("Trade token swapped to Ada successfully"));
-    exchange.swapAdaToTradeToken(BigInt(103201)).then(() => console.log("Ada swapped to trade token successfully"));
+    // mintAuthToken(privateKey).then(() => console.log("Auth token minted successfully"));
+
+    // createLiquidityPoolUTxO(privateKey, minAsset).then(() => console.log("Liquidity pool UTxO for min token created successfully"));
+    // createLiquidityPoolUTxO(privateKey, trashAsset).then(() => console.log("Liquidity pool UTxO for trash token successfully"));
+
+    // minExchange.addLiquidity(BigInt(15550000)).then(() => console.log("Liquidity added successfully for min token"));
+    // minExchange.removeLiquidity(BigInt(103400)).then(() => console.log("Liquidity removed successfully for min token"));
+    // minExchange.swapTradeTokenToAda(BigInt(50000)).then(() => console.log("Trade token swapped to Ada successfully for min token"));
+    // minExchange.swapAdaToTradeToken(BigInt(103201)).then(() => console.log("Ada swapped to trade token successfully for min token"));
+
+    // trashExchange.addLiquidity(BigInt(1555000)).then(() => console.log("Liquidity added successfully for trash token"));
+    // trashExchange.removeLiquidity(BigInt(103400)).then(() => console.log("Liquidity removed successfully for trash token"));
+    // trashExchange.swapTradeTokenToAda(BigInt(50000)).then(() => console.log("Trade token swapped to Ada successfully for trash token"));
+    // trashExchange.swapAdaToTradeToken(BigInt(103201)).then(() => console.log("Ada swapped to trade token successfully for trash token"));
+
+    // minExchange.swapTradeTokenToOtherToken(BigInt(50000), trashAsset).then(() => console.log("Trade token swapped to other token successfully for min token"));
 }
 
 main();

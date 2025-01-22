@@ -1,5 +1,5 @@
 import {getMintAuthValidator, getMintExchangeValidator} from "../utils";
-import {AUTH_TOKEN_NAME} from "../types";
+import {Asset, AUTH_TOKEN_NAME} from "../types";
 import {Constr, Data, fromText} from "@lucid-evolution/lucid";
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
 import {getPublicKeyHash, submitTx} from "../../../hello-world/common";
@@ -23,14 +23,14 @@ export async function mintAuthToken(privateKey: string) {
     await submitTx(tx, lucid);
 }
 
-export async function createLiquidityPoolUTxO(privateKey: string) {
+export async function createLiquidityPoolUTxO(privateKey: string, tradeAsset: Asset) {
     const lucid = await getLucidOgmiosInstance();
     lucid.selectWallet.fromPrivateKey(privateKey);
 
     const publicKeyHash = getPublicKeyHash(privateKey);
 
     const mintAuthTokenValidator = getMintAuthValidator(publicKeyHash)
-    const mintExchangeValidator = getMintExchangeValidator(publicKeyHash);
+    const mintExchangeValidator = getMintExchangeValidator(publicKeyHash, tradeAsset);
 
     const authAssetName = `${mintAuthTokenValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
 
