@@ -1,11 +1,8 @@
 import {
-    getAddressDetails,
-    SpendingValidator,
     validatorToAddress,
-    toPublicKey,
     UTxO,
     Data,
-    Datum, TxSignBuilder, LucidEvolution, Validator
+    Datum, TxSignBuilder, LucidEvolution, Validator, CML
 } from "@lucid-evolution/lucid";
 import fs from "node:fs";
 import * as path from "path";
@@ -65,16 +62,12 @@ export function getPrivateKeyFrom(path_str: string): string {
     return fs.readFileSync(absolutePath, "utf8");
 }
 
-export function getPublicKeyHash(privateKey: string): string {
-    const publicKeyHash = getAddressDetails(
-        toPublicKey(privateKey)
-    ).paymentCredential?.hash;
+export function getPublicKeyHash(privateKeyBech32: string): string {
+    const privateKey = CML.PrivateKey.from_bech32(privateKeyBech32);
+    const publicKey = privateKey.to_public();
+    const publicKeyHash = publicKey.hash();
 
-    if (!publicKeyHash) {
-        throw new Error("Unable to retrieve publicKeyHash from the wallet address");
-    }
-
-    return publicKeyHash;
+    return publicKeyHash.to_hex();
 }
 
 export function toCBOR(data: Object, DataSchema: any): Datum {

@@ -285,9 +285,9 @@ class Exchange {
 
 // mintAuthToken().then(() => console.log("Auth token minted successfully"));
 // createLiquidityPoolUTxO().then(() => console.log("Liquidity pool UTxO created successfully"));
-Exchange.getInstance(getPrivateKeyFrom(PRIVATE_KEY_PATH), getPublicKeyHash(getPrivateKey())).then(async exchange => {
-    // await exchange.addLiquidity(BigInt(1555000));
-    await exchange.removeLiquidity(BigInt(103400));
-    // await exchange.swapToAda(BigInt(50000));
-    // await exchange.swapToToken(BigInt(103201));
-});
+// Exchange.getInstance(getPrivateKeyFrom(PRIVATE_KEY_PATH), getPublicKeyHash(getPrivateKeyFrom(PRIVATE_KEY_PATH))).then(async exchange => {
+//     // await exchange.addLiquidity(BigInt(1555000));
+//     // await exchange.removeLiquidity(BigInt(103400));
+//     // await exchange.swapToAda(BigInt(50000));
+//     // await exchange.swapToToken(BigInt(103201));
+// });
