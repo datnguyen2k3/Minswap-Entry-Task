@@ -1,6 +1,6 @@
 import {OgmiosProvider} from "../../src/providers/ogmios-provider";
 import * as Ogmios from "@cardano-ogmios/client";
-import {Blockfrost, Lucid, LucidEvolution, OutRef, UTxO} from "@lucid-evolution/lucid";
+import {Blockfrost, Credential, Lucid, LucidEvolution, OutRef, UTxO} from "@lucid-evolution/lucid";
 import {ProtocolParameters} from "@lucid-evolution/lucid";
 import {sortUTxO} from "../../src/ultis/ultis";
 
@@ -83,6 +83,25 @@ describe("#OgmiosProvider", () => {
 
             it("should return the expected utxos", async () => {
                 const utxos = await ogmiosProvider.getUtxos(address);
+
+                expectEqualUTxOs(utxos, expectedUtxos);
+            });
+        });
+
+        describe("with input is credential", () => {
+            let credential: Credential = {
+                type: "Script",
+                hash: "635fb467081a4b83c005606329babeb9efa3e0445f520d6b222ff993"
+            }
+            let expectedUtxos: UTxO[];
+
+            beforeEach(async () => {
+                expectedUtxos = await blockfrostProvider.getUtxos(credential);
+                console.log(expectedUtxos);
+            });
+
+            it("should return the expected utxos", async () => {
+                const utxos = await ogmiosProvider.getUtxos(credential);
 
                 expectEqualUTxOs(utxos, expectedUtxos);
             });

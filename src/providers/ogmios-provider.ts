@@ -17,7 +17,8 @@ import {
     Transaction,
     TxHash,
     Unit,
-    UTxO
+    UTxO,
+    credentialToAddress
 } from "@lucid-evolution/lucid";
 import {TransactionSubmissionClient} from "@cardano-ogmios/client/dist/TransactionSubmission";
 import {parseFraction} from "../ultis/ultis";
@@ -305,13 +306,18 @@ export class OgmiosProvider implements Provider {
 
     async getUtxos(addressOrCredential: Address | Credential): Promise<UTxO[]> {
         if (typeof addressOrCredential === "string") {
-            const client = await this.getLedgerStateClient();
-            const utxos = await client.utxo({addresses: [addressOrCredential]});
-            const lucidUtxos = this.toUtxos(utxos);
-            return lucidUtxos;
-        } else { // TODO: handle case of Credential
-            throw new Error("Method not implemented.");
+            return this.getUTxosByAddress(addressOrCredential);
+        } else {
+            const address = credentialToAddress("Preprod", addressOrCredential);
+            return this.getUTxosByAddress(address);
         }
+    }
+
+    async getUTxosByAddress(address: Address): Promise<UTxO[]> {
+        const client = await this.getLedgerStateClient();
+        const utxos = await client.utxo({addresses: [address]});
+        const lucidUtxos = this.toUtxos(utxos);
+        return lucidUtxos;
     }
 
     getUtxosWithUnit(addressOrCredential: Address | Credential, unit: Unit): Promise<UTxO[]> {
