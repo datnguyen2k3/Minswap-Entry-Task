@@ -27,6 +27,7 @@ class Exchange {
     private readonly authAssetName: string;
     public static readonly ADD_REDEEMER: Redeemer = Data.to(new Constr(0, []));
     public static readonly REMOVE_REDEEMER: Redeemer = Data.to(new Constr(1, []));
+    public static readonly SWAP_TO_ADA_REDEEMER: Redeemer = Data.to(new Constr(2, []));
 
     constructor(lucid: LucidEvolution, mintExchangeValidator: MintValidators, mintAuthValidator: MintValidators) {
         this.lucid = lucid;
@@ -198,12 +199,53 @@ class Exchange {
 
         await submitTx(tx, this.lucid);
     }
+
+    public async swapToAda(swappedTradeToken: bigint) {
+        console.log("Swapped trade token:", swappedTradeToken);
+        const lpUTxO = await getLiquidityPoolUTxO(this.lucid);
+        const lpTokenSupply = await Exchange.getTotalSupply(lpUTxO);
+
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
+
+        const receivedLovelace = swappedTradeToken * reservedLovelace / (reservedTradeToken + swappedTradeToken);
+        console.log("Received lovelace:", receivedLovelace);
+
+        const inputUTxOs = await this.lucid.wallet().getUtxos();
+        inputUTxOs.push(lpUTxO);
+
+        const tx = await this.lucid
+            .newTx()
+            .collectFrom(inputUTxOs, Exchange.SWAP_TO_ADA_REDEEMER)
+            .attach.SpendingValidator(this.mintExchangeValidator.policyScripts)
+            .pay.ToContract(
+                this.mintExchangeValidator.lockAddress,
+                {
+                    kind: 'inline',
+                    value: Data.to(new Constr(0, [BigInt(lpTokenSupply)]))
+                }, {
+                    lovelace: reservedLovelace - receivedLovelace,
+                    [this.authAssetName]: BigInt(1),
+                    [this.tradeAssetName]: reservedTradeToken + swappedTradeToken
+                }
+            )
+            .pay.ToAddress(
+                await this.lucid.wallet().address(),
+                {
+                    lovelace: receivedLovelace
+                }
+            )
+            .complete();
+
+        await submitTx(tx, this.lucid);
+    }
 }
 
 // mintAuthToken().then(() => console.log("Auth token minted successfully"));
 // createLiquidityPoolUTxO().then(() => console.log("Liquidity pool UTxO created successfully"));
 
 // Exchange.getInstance(getPrivateKeyFrom(PRIVATE_KEY_PATH)).then(async exchange => {
-//     await exchange.addLiquidity(BigInt(1200000));
-//     await exchange.removeLiquidity(BigInt(103400));
+//     // await exchange.addLiquidity(BigInt(1200000));
+//     // await exchange.removeLiquidity(BigInt(103400));
+//     // await exchange.swapToAda(BigInt(103201));
 // });
