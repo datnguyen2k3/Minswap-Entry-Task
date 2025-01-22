@@ -7,6 +7,7 @@ import {
     validatorToScriptHash
 } from "@lucid-evolution/lucid";
 import {
+    Asset,
     AUTH_TOKEN_NAME,
     LIQUIDITY_POOL_INFO_SCHEME, MIN_TOKEN_NAME, MIN_TOKEN_POLICY_ID,
     MINT_AUTH_TOKEN_TITLE,
@@ -63,7 +64,7 @@ export function getMintAuthValidator(adminPublicKeyHash: string) : MintValidator
     );
 }
 
-export function getMintExchangeValidator(adminPublicKeyHash: string, tradeTokenPolicyId?: string, tradeTokenName?: string) : MintValidators{
+export function getMintExchangeValidator(adminPublicKeyHash: string, tradeAsset?: Asset) : MintValidators{
     const mintAuthValidators = getMintAuthValidator(adminPublicKeyHash);
 
     let tradeTokenAsset = new Constr(0, [
@@ -71,10 +72,10 @@ export function getMintExchangeValidator(adminPublicKeyHash: string, tradeTokenP
         fromText(MIN_TOKEN_NAME)
     ]);
 
-    if (tradeTokenPolicyId && tradeTokenName) {
+    if (tradeAsset) {
         tradeTokenAsset = new Constr(0, [
-            tradeTokenPolicyId,
-            fromText(tradeTokenName)
+            tradeAsset.policyId,
+            fromText(tradeAsset.tokenName)
         ]);
     }
 

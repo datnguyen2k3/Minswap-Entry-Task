@@ -1,6 +1,7 @@
 import {Constr, Data, fromText, LucidEvolution, Redeemer, UTxO} from "@lucid-evolution/lucid";
 import {getPrivateKeyFrom, getPublicKeyHash, submitTx, toObject} from "../../../hello-world/common";
 import {
+    Asset,
     AUTH_TOKEN_NAME,
     INIT_LP_TOKEN_AMOUNT,
     LIQUIDITY_POOL_INFO_SCHEME,
@@ -24,21 +25,21 @@ class Exchange {
     public static readonly SWAP_TO_ADA_REDEEMER: Redeemer = Data.to(new Constr(2, []));
     public static readonly SWAP_TO_TOKEN_REDEEMER: Redeemer = Data.to(new Constr(3, []));
 
-    constructor(lucid: LucidEvolution, adminPublicKeyHash: string, tradeTokenPolicyId: string, tradeTokenName: string) {
+    constructor(lucid: LucidEvolution, adminPublicKeyHash: string, tradeAsset: Asset) {
         this.lucid = lucid;
-        this.mintExchangeValidator = getMintExchangeValidator(adminPublicKeyHash, tradeTokenPolicyId, tradeTokenName);
+        this.mintExchangeValidator = getMintExchangeValidator(adminPublicKeyHash, tradeAsset);
         this.mintAuthValidator = getMintAuthValidator(adminPublicKeyHash);
         this.adminPublicKeyHash = adminPublicKeyHash;
-        this.tradeAssetName = `${tradeTokenPolicyId}${fromText(tradeTokenName)}`;
+        this.tradeAssetName = `${tradeAsset.policyId}${fromText(tradeAsset.tokenName)}`;
         this.lpAssetName = `${this.mintExchangeValidator.policyId}${fromText(LP_TOKEN_NAME)}`;
         this.authAssetName = `${this.mintAuthValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
     }
 
-    public static async getInstance(privateKey: string, adminPublicKeyHash: string, tradeTokenPolicyId: string, tradeTokenName: string) {
+    public static async getInstance(privateKey: string, adminPublicKeyHash: string, tradeAsset: Asset) {
         const lucid = await getLucidOgmiosInstance();
         lucid.selectWallet.fromPrivateKey(privateKey);
 
-        return new Exchange(lucid, adminPublicKeyHash, tradeTokenPolicyId, tradeTokenName);
+        return new Exchange(lucid, adminPublicKeyHash, tradeAsset);
     }
 
     public static async getTotalSupply(lpUTxO: UTxO) {
@@ -283,8 +284,7 @@ const privateKey = getPrivateKeyFrom(PRIVATE_KEY_PATH);
 // Exchange.getInstance(
 //     privateKey,
 //     getPublicKeyHash(privateKey),
-//     MIN_TOKEN_POLICY_ID,
-//     MIN_TOKEN_NAME
+//     {policyId: MIN_TOKEN_POLICY_ID, tokenName: MIN_TOKEN_NAME}
 // ).then(async exchange => {
 //     // await exchange.addLiquidity(BigInt(1555000));
 //     // await exchange.removeLiquidity(BigInt(103400));

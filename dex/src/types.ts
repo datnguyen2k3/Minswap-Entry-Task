@@ -19,6 +19,11 @@ export type MintValidators = {
     lockAddress: string;
 }
 
+export type Asset = {
+    tokenName: string;
+    policyId: string;
+}
+
 export const LIQUIDITY_POOL_INFO_SCHEME =  Data.Object({
     total_supply: Data.Integer()
 })
