@@ -13,7 +13,7 @@ const helloWorldTitle = "hello_world.hello_world.spend";
 
 async function main() {
     const scriptAddress = getScriptsAddress(helloWorldTitle);
-    const publicKeyHash = await getPublicKeyHash(getPrivateKey(), await getLucidOgmiosInstance());
+    const publicKeyHash = getPublicKeyHash(getPrivateKey());
     const utxos = await getUTxOsFromScriptAddressByPublicKeyHash(scriptAddress, publicKeyHash);
     const redeemer = Data.to(new Constr(0, [utf8ToHex("Hello, World!")]));
     const receiveAddress = "addr_test1vpfsn7ncdptvzf3dp9dcnt0kfl522f266xg59jw9xu6eusgmessnp";

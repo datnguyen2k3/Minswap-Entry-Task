@@ -7,7 +7,7 @@ import {
     MIN_TOKEN_POLICY_ID, mintAuthToken
 } from "./admin-functions";
 import {Constr, Data, fromText, LucidEvolution, Redeemer, UTxO} from "@lucid-evolution/lucid";
-import {getPrivateKey, getPrivateKeyFrom, submitTx, toObject} from "../../../hello-world/common";
+import {getPrivateKey, getPrivateKeyFrom, getPublicKeyHash, submitTx, toObject} from "../../../hello-world/common";
 import {
     AUTH_TOKEN_NAME,
     INIT_LP_TOKEN_AMOUNT,
@@ -17,7 +17,6 @@ import {
 } from "../types";
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
 import {isEqualRational} from "../utils";
-import {BI} from "cbor/types/lib/constants";
 
 class Exchange {
     private readonly lucid: LucidEvolution;
@@ -26,28 +25,28 @@ class Exchange {
     private readonly tradeAssetName: string;
     private readonly lpAssetName: string;
     private readonly authAssetName: string;
+    private readonly adminPublicKeyHash: string;
+
     public static readonly ADD_REDEEMER: Redeemer = Data.to(new Constr(0, []));
     public static readonly REMOVE_REDEEMER: Redeemer = Data.to(new Constr(1, []));
     public static readonly SWAP_TO_ADA_REDEEMER: Redeemer = Data.to(new Constr(2, []));
     public static readonly SWAP_TO_TOKEN_REDEEMER: Redeemer = Data.to(new Constr(3, []));
 
-    constructor(lucid: LucidEvolution, mintExchangeValidator: MintValidators, mintAuthValidator: MintValidators) {
+    constructor(lucid: LucidEvolution, adminPublicKeyHash: string) {
         this.lucid = lucid;
-        this.mintExchangeValidator = mintExchangeValidator;
-        this.mintAuthValidator = mintAuthValidator;
+        this.mintExchangeValidator = getMintExchangeValidator(adminPublicKeyHash);
+        this.mintAuthValidator = getMintAuthValidator(adminPublicKeyHash);
+        this.adminPublicKeyHash = adminPublicKeyHash;
         this.tradeAssetName = `${MIN_TOKEN_POLICY_ID}${fromText(MIN_TOKEN_NAME)}`;
-        this.lpAssetName = `${mintExchangeValidator.policyId}${fromText(LP_TOKEN_NAME)}`;
-        this.authAssetName = `${mintAuthValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
+        this.lpAssetName = `${this.mintExchangeValidator.policyId}${fromText(LP_TOKEN_NAME)}`;
+        this.authAssetName = `${this.mintAuthValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
     }
 
-    public static async getInstance(privateKey: string) {
+    public static async getInstance(privateKey: string, adminPublicKeyHash: string) {
         const lucid = await getLucidOgmiosInstance();
         lucid.selectWallet.fromPrivateKey(privateKey);
 
-        const mintExchangeValidator = await getMintExchangeValidator(lucid);
-        const mintAuthValidator = await getMintAuthValidator(lucid);
-
-        return new Exchange(lucid, mintExchangeValidator, mintAuthValidator);
+        return new Exchange(lucid, adminPublicKeyHash);
     }
 
     public static async getTotalSupply(lpUTxO: UTxO) {
@@ -56,7 +55,7 @@ class Exchange {
     }
 
     public async addLiquidity(addedLovelace: bigint) {
-        const lpUTxO = await getLiquidityPoolUTxO(this.lucid);
+        const lpUTxO = await getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash);
         const lpTokenSupply = await Exchange.getTotalSupply(lpUTxO);
 
         if (lpTokenSupply === BigInt(0)) {
@@ -148,7 +147,7 @@ class Exchange {
 
     public async removeLiquidity(burnedLpToken: bigint) {
         console.log("Burned LP token:", burnedLpToken);
-        const lpUTxO = await getLiquidityPoolUTxO(this.lucid);
+        const lpUTxO = await getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash);
         const lpTokenSupply = await Exchange.getTotalSupply(lpUTxO);
 
         const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
@@ -204,7 +203,7 @@ class Exchange {
 
     public async swapToAda(swappedTradeToken: bigint) {
         console.log("Swapped trade token:", swappedTradeToken);
-        const lpUTxO = await getLiquidityPoolUTxO(this.lucid);
+        const lpUTxO = await getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash);
         const lpTokenSupply = await Exchange.getTotalSupply(lpUTxO);
 
         const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
@@ -244,7 +243,7 @@ class Exchange {
 
     public async swapToToken(swappedLovelace: bigint) {
         console.log("Swapped lovelace:", swappedLovelace);
-        const lpUTxO = await getLiquidityPoolUTxO(this.lucid);
+        const lpUTxO = await getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash);
         const lpTokenSupply = await Exchange.getTotalSupply(lpUTxO);
 
         const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
@@ -283,11 +282,12 @@ class Exchange {
     }
 }
 
-// // mintAuthToken().then(() => console.log("Auth token minted successfully"));
-// // createLiquidityPoolUTxO().then(() => console.log("Liquidity pool UTxO created successfully"));
-// Exchange.getInstance(getPrivateKeyFrom(PRIVATE_KEY_PATH)).then(async exchange => {
-//     // await exchange.addLiquidity(BigInt(1555000));
-//     // await exchange.removeLiquidity(BigInt(103400));
-//     // await exchange.swapToAda(BigInt(50000));
-//     // await exchange.swapToToken(BigInt(103201));
-// });
+
+// mintAuthToken().then(() => console.log("Auth token minted successfully"));
+// createLiquidityPoolUTxO().then(() => console.log("Liquidity pool UTxO created successfully"));
+Exchange.getInstance(getPrivateKeyFrom(PRIVATE_KEY_PATH), getPublicKeyHash(getPrivateKey())).then(async exchange => {
+    // await exchange.addLiquidity(BigInt(1555000));
+    await exchange.removeLiquidity(BigInt(103400));
+    // await exchange.swapToAda(BigInt(50000));
+    // await exchange.swapToToken(BigInt(103201));
+});

@@ -65,11 +65,9 @@ export function getPrivateKeyFrom(path_str: string): string {
     return fs.readFileSync(absolutePath, "utf8");
 }
 
-export async function getPublicKeyHash(privateKey: string, lucid: LucidEvolution): Promise<string> {
-    lucid.selectWallet.fromPrivateKey(privateKey);
-
+export function getPublicKeyHash(privateKey: string): string {
     const publicKeyHash = getAddressDetails(
-        await lucid.wallet().address()
+        toPublicKey(privateKey)
     ).paymentCredential?.hash;
 
     if (!publicKeyHash) {

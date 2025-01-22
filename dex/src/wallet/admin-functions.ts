@@ -10,18 +10,16 @@ const MINT_EXCHANGE_TITLE = "exchange.exchange.mint";
 export const MIN_TOKEN_POLICY_ID = "e16c2dc8ae937e8d3790c7fd7168d7b994621ba14ca11415f39fed72";
 export const MIN_TOKEN_NAME = "MIN";
 
-export async function getMintAuthValidator(lucid: LucidEvolution) : Promise<MintValidators>{
-    const privateKey = getPrivateKeyFrom(PRIVATE_KEY_PATH)
-    const publicKeyHash = await getPublicKeyHash(privateKey, lucid);
+export function getMintAuthValidator(adminPublicKeyHash: string) : MintValidators{
     return readMintValidators(
         MINT_AUTH_TOKEN_TITLE,
         PLUTUS_PATH,
-        [publicKeyHash]
+        [adminPublicKeyHash]
     );
 }
 
-export async function getMintExchangeValidator(lucid: LucidEvolution) : Promise<MintValidators>{
-    const mintAuthValidators = await getMintAuthValidator(lucid);
+export function getMintExchangeValidator(adminPublicKeyHash: string) : MintValidators{
+    const mintAuthValidators = getMintAuthValidator(adminPublicKeyHash);
 
     const tradeTokenAsset = new Constr(0, [
         MIN_TOKEN_POLICY_ID,
@@ -46,7 +44,9 @@ export async function mintAuthToken() {
     const lucid = await getLucidOgmiosInstance();
     lucid.selectWallet.fromPrivateKey(privateKey);
 
-    const mintAuthValidator = await getMintAuthValidator(lucid)
+    const publicKeyHash = getPublicKeyHash(privateKey);
+
+    const mintAuthValidator = getMintAuthValidator(publicKeyHash);
     const authAssetName = `${mintAuthValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
     const mintRedeemer = Data.to(new Constr(0, []));
 
@@ -67,8 +67,10 @@ export async function createLiquidityPoolUTxO() {
     const lucid = await getLucidOgmiosInstance();
     lucid.selectWallet.fromPrivateKey(privateKey);
 
-    const mintAuthTokenValidator = await getMintAuthValidator(lucid)
-    const mintExchangeValidator = await getMintExchangeValidator(lucid);
+    const publicKeyHash = getPublicKeyHash(privateKey);
+
+    const mintAuthTokenValidator = getMintAuthValidator(publicKeyHash)
+    const mintExchangeValidator = getMintExchangeValidator(publicKeyHash);
 
     const authAssetName = `${mintAuthTokenValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
 
@@ -87,10 +89,9 @@ export async function createLiquidityPoolUTxO() {
     await submitTx(tx, lucid);
 }
 
-export async function getLiquidityPoolUTxO(lucid: LucidEvolution) {
-    const privateKey = getPrivateKeyFrom(PRIVATE_KEY_PATH)
-    const mintAuthValidators = await getMintAuthValidator(lucid);
-    const mintExchangeValidator = await getMintExchangeValidator(lucid);
+export async function getLiquidityPoolUTxO(lucid: LucidEvolution, adminPublicKeyHash: string) {
+    const mintAuthValidators = getMintAuthValidator(adminPublicKeyHash);
+    const mintExchangeValidator = getMintExchangeValidator(adminPublicKeyHash);
 
     const authAssetName = `${mintAuthValidators.policyId}${fromText(AUTH_TOKEN_NAME)}`;
 
