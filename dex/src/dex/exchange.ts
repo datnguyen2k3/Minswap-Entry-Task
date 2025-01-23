@@ -288,6 +288,50 @@ class Exchange {
             .complete();
     }
 
+    public async createSwapTradeTokenToOtherTokenTx(
+        tradeExchangeLpUTxO: UTxO,
+        otherExchangeLpUTxO: UTxO,
+        swappedTradeToken: bigint,
+        receivedOtherToken: bigint,
+        otherAsset: Asset
+    ) {
+        const bridgeLoveLace = Exchange.getReceivedLovelaceBySwapTradeToken(tradeExchangeLpUTxO, swappedTradeToken, this.tradeAssetName);
+        const otherAssetName = `${otherAsset.policyId}${fromText(otherAsset.tokenName)}`;
+        const otherExchangeValidator = getExchangeValidator(this.adminPublicKeyHash, otherAsset);
+
+        const inputUTxOs = await this.lucid.wallet().getUtxos();
+
+        return await this.lucid
+            .newTx()
+            .collectFrom(inputUTxOs.concat(tradeExchangeLpUTxO), Exchange.SWAP_TO_ADA_REDEEMER)
+            .collectFrom([otherExchangeLpUTxO], Exchange.SWAP_TO_TOKEN_REDEEMER)
+            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
+            .attach.SpendingValidator(otherExchangeValidator.policyScripts)
+            .pay.ToContract(
+                this.exchangeValidator.lockAddress,
+                {
+                    kind: 'inline',
+                    value: Data.to(new Constr(0, [BigInt(Exchange.getTotalSupply(tradeExchangeLpUTxO))]))
+                }, {
+                    [this.authAssetName]: BigInt(1),
+                    lovelace: tradeExchangeLpUTxO.assets["lovelace"] - bridgeLoveLace,
+                    [this.tradeAssetName]: tradeExchangeLpUTxO.assets[this.tradeAssetName] + swappedTradeToken,
+                }
+            )
+            .pay.ToContract(
+                otherExchangeValidator.lockAddress,
+                {
+                    kind: 'inline',
+                    value: Data.to(new Constr(0, [BigInt(Exchange.getTotalSupply(otherExchangeLpUTxO))]))
+                }, {
+                    [this.authAssetName]: BigInt(1),
+                    lovelace: otherExchangeLpUTxO.assets["lovelace"] + bridgeLoveLace,
+                    [otherAssetName]: otherExchangeLpUTxO.assets[otherAssetName] - receivedOtherToken,
+                }
+            )
+            .complete();
+    }
+
     public async addLiquidity(addedLovelace: bigint) {
         const lpUTxO = await Exchange.getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash, this.tradeAsset);
 
@@ -376,48 +420,23 @@ class Exchange {
     }
 
     public async swapTradeTokenToOtherToken(swappedTradeToken: bigint, otherAsset: Asset) {
-        console.log("Swapped trade token:", swappedTradeToken);
-        const tradeTokenLpUTxO = await Exchange.getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash, this.tradeAsset);
-        const swappedLovelace = Exchange.getReceivedLovelaceBySwapTradeToken(tradeTokenLpUTxO, swappedTradeToken, this.tradeAssetName);
-
-        const otherAssetName = `${otherAsset.policyId}${fromText(otherAsset.tokenName)}`;
+        const tradeExchangeLpUTxO = await Exchange.getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash, this.tradeAsset);
         const otherExchangeLpUTxO = await Exchange.getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash, otherAsset);
-        const receivedOtherToken = Exchange.getReceivedTradeTokenBySwapAda(otherExchangeLpUTxO, swappedLovelace, otherAssetName);
+        const otherAssetName = `${otherAsset.policyId}${fromText(otherAsset.tokenName)}`;
+
+        const bridgeLovelace = Exchange.getReceivedLovelaceBySwapTradeToken(tradeExchangeLpUTxO, swappedTradeToken, this.tradeAssetName);
+        const receivedOtherToken = Exchange.getReceivedTradeTokenBySwapAda(otherExchangeLpUTxO, bridgeLovelace, otherAssetName);
+
+        console.log("Swapped trade token:", swappedTradeToken);
         console.log("Received other token:", receivedOtherToken);
 
-        const otherExchangeValidator = getExchangeValidator(this.adminPublicKeyHash, otherAsset);
-
-        const inputUTxOs = await this.lucid.wallet().getUtxos();
-
-        const tx = await this.lucid
-            .newTx()
-            .collectFrom(inputUTxOs.concat(tradeTokenLpUTxO), Exchange.SWAP_TO_ADA_REDEEMER)
-            .collectFrom([otherExchangeLpUTxO], Exchange.SWAP_TO_TOKEN_REDEEMER)
-            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
-            .attach.SpendingValidator(otherExchangeValidator.policyScripts)
-            .pay.ToContract(
-                this.exchangeValidator.lockAddress,
-                {
-                    kind: 'inline',
-                    value: Data.to(new Constr(0, [BigInt(Exchange.getTotalSupply(tradeTokenLpUTxO))]))
-                }, {
-                    [this.authAssetName]: BigInt(1),
-                    lovelace: tradeTokenLpUTxO.assets["lovelace"] - swappedLovelace,
-                    [this.tradeAssetName]: tradeTokenLpUTxO.assets[this.tradeAssetName] + swappedTradeToken,
-                }
-            )
-            .pay.ToContract(
-                otherExchangeValidator.lockAddress,
-                {
-                    kind: 'inline',
-                    value: Data.to(new Constr(0, [BigInt(Exchange.getTotalSupply(otherExchangeLpUTxO))]))
-                }, {
-                    [this.authAssetName]: BigInt(1),
-                    lovelace: otherExchangeLpUTxO.assets["lovelace"] + swappedLovelace,
-                    [otherAssetName]: otherExchangeLpUTxO.assets[otherAssetName] - receivedOtherToken,
-                }
-            )
-            .complete();
+        const tx = await this.createSwapTradeTokenToOtherTokenTx(
+            tradeExchangeLpUTxO,
+            otherExchangeLpUTxO,
+            swappedTradeToken,
+            receivedOtherToken,
+            otherAsset
+        )
 
         await submitTx(tx, this.lucid);
     }
@@ -468,7 +487,7 @@ async function main() {
     // trashExchange.swapTradeTokenToAda(BigInt(50000)).then(() => console.log("Trade token swapped to Ada successfully for trash token"));
     // trashExchange.swapAdaToTradeToken(BigInt(103201)).then(() => console.log("Ada swapped to trade token successfully for trash token"));
 
-    // minExchange.swapTradeTokenToOtherToken(BigInt(50000), trashAsset).then(() => console.log("Trade token swapped to other token successfully for min token"));
+    minExchange.swapTradeTokenToOtherToken(BigInt(50000), trashAsset).then(() => console.log("Trade token swapped to other token successfully for min token"));
 }
 
 main();
