@@ -224,6 +224,70 @@ class Exchange {
             .complete();
     }
 
+    public async createSwapTradeTokenToAdaTx(lpUTxO: UTxO, swappedTradeToken: bigint, receivedLovelace: bigint) {
+        const lpTokenSupply = Exchange.getTotalSupply(lpUTxO);
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
+
+        const inputUTxOs = await this.lucid.wallet().getUtxos();
+        inputUTxOs.push(lpUTxO);
+
+        return await this.lucid
+            .newTx()
+            .collectFrom(inputUTxOs, Exchange.SWAP_TO_ADA_REDEEMER)
+            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
+            .pay.ToContract(
+                this.exchangeValidator.lockAddress,
+                {
+                    kind: 'inline',
+                    value: Data.to(new Constr(0, [BigInt(lpTokenSupply)]))
+                }, {
+                    lovelace: reservedLovelace - receivedLovelace,
+                    [this.authAssetName]: BigInt(1),
+                    [this.tradeAssetName]: reservedTradeToken + swappedTradeToken
+                }
+            )
+            .pay.ToAddress(
+                await this.lucid.wallet().address(),
+                {
+                    lovelace: receivedLovelace
+                }
+            )
+            .complete();
+    }
+
+    public async createSwapAdaToTradeTokenTx(lpUTxO: UTxO, swappedLovelace: bigint, receivedTradeToken: bigint) {
+        const lpTokenSupply = Exchange.getTotalSupply(lpUTxO);
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
+
+        const inputUTxOs = await this.lucid.wallet().getUtxos();
+        inputUTxOs.push(lpUTxO);
+
+        return await this.lucid
+            .newTx()
+            .collectFrom(inputUTxOs, Exchange.SWAP_TO_TOKEN_REDEEMER)
+            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
+            .pay.ToContract(
+                this.exchangeValidator.lockAddress,
+                {
+                    kind: 'inline',
+                    value: Data.to(new Constr(0, [BigInt(lpTokenSupply)]))
+                }, {
+                    [this.authAssetName]: BigInt(1),
+                    lovelace: reservedLovelace + swappedLovelace,
+                    [this.tradeAssetName]: reservedTradeToken - receivedTradeToken
+                }
+            )
+            .pay.ToAddress(
+                await this.lucid.wallet().address(),
+                {
+                    [this.tradeAssetName]: receivedTradeToken
+                }
+            )
+            .complete();
+    }
+
     public async addLiquidity(addedLovelace: bigint) {
         const lpUTxO = await Exchange.getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash, this.tradeAsset);
 
@@ -272,81 +336,41 @@ class Exchange {
     }
 
     public async swapTradeTokenToAda(swappedTradeToken: bigint) {
-        console.log("Swapped trade token:", swappedTradeToken);
         const lpUTxO = await Exchange.getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash, this.tradeAsset);
-        const lpTokenSupply = Exchange.getTotalSupply(lpUTxO);
 
-        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
-        const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
+        if (Exchange.getTotalSupply(lpUTxO) === BigInt(0)) {
+            throw new Error("Liquidity pool is empty");
+        }
 
         const receivedLovelace = Exchange.getReceivedLovelaceBySwapTradeToken(lpUTxO, swappedTradeToken, this.tradeAssetName);
+        console.log("Swapped trade token:", swappedTradeToken);
         console.log("Received lovelace:", receivedLovelace);
 
-        const inputUTxOs = await this.lucid.wallet().getUtxos();
-        inputUTxOs.push(lpUTxO);
-
-        const tx = await this.lucid
-            .newTx()
-            .collectFrom(inputUTxOs, Exchange.SWAP_TO_ADA_REDEEMER)
-            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
-            .pay.ToContract(
-                this.exchangeValidator.lockAddress,
-                {
-                    kind: 'inline',
-                    value: Data.to(new Constr(0, [BigInt(lpTokenSupply)]))
-                }, {
-                    lovelace: reservedLovelace - receivedLovelace,
-                    [this.authAssetName]: BigInt(1),
-                    [this.tradeAssetName]: reservedTradeToken + swappedTradeToken
-                }
-            )
-            .pay.ToAddress(
-                await this.lucid.wallet().address(),
-                {
-                    lovelace: receivedLovelace
-                }
-            )
-            .complete();
+        const tx = await this.createSwapTradeTokenToAdaTx(
+            lpUTxO,
+            swappedTradeToken,
+            receivedLovelace
+        )
 
         await submitTx(tx, this.lucid);
     }
 
     public async swapAdaToTradeToken(swappedLovelace: bigint) {
-        console.log("Swapped lovelace:", swappedLovelace);
         const lpUTxO = await Exchange.getLiquidityPoolUTxO(this.lucid, this.adminPublicKeyHash, this.tradeAsset);
-        const lpTokenSupply = Exchange.getTotalSupply(lpUTxO);
 
-        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
-        const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
+        if (Exchange.getTotalSupply(lpUTxO) === BigInt(0)) {
+            throw new Error("Liquidity pool is empty");
+        }
 
         const receivedTradeToken = Exchange.getReceivedTradeTokenBySwapAda(lpUTxO, swappedLovelace, this.tradeAssetName);
+        console.log("Swapped lovelace:", swappedLovelace);
         console.log("Received trade token:", receivedTradeToken);
 
-        const inputUTxOs = await this.lucid.wallet().getUtxos();
-        inputUTxOs.push(lpUTxO);
-
-        const tx = await this.lucid
-            .newTx()
-            .collectFrom(inputUTxOs, Exchange.SWAP_TO_TOKEN_REDEEMER)
-            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
-            .pay.ToContract(
-                this.exchangeValidator.lockAddress,
-                {
-                    kind: 'inline',
-                    value: Data.to(new Constr(0, [BigInt(lpTokenSupply)]))
-                }, {
-                    lovelace: reservedLovelace + swappedLovelace,
-                    [this.authAssetName]: BigInt(1),
-                    [this.tradeAssetName]: reservedTradeToken - receivedTradeToken
-                }
-            )
-            .pay.ToAddress(
-                await this.lucid.wallet().address(),
-                {
-                    [this.tradeAssetName]: receivedTradeToken
-                }
-            )
-            .complete();
+        const tx = await this.createSwapAdaToTradeTokenTx(
+            lpUTxO,
+            swappedLovelace,
+            receivedTradeToken
+        )
 
         await submitTx(tx, this.lucid);
     }
