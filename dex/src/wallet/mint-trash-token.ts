@@ -24,5 +24,3 @@ export async function mintTrashToken(privateKey: string) {
 
     await submitTx(tx, lucid);
 }
-
-// mintTrashToken(getPrivateKeyFrom(PRIVATE_KEY_PATH)).then(() => console.log("Mint Trash Token successfully!"));

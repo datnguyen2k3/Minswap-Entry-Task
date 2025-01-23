@@ -1,50 +1,68 @@
 import {getMintAuthValidator, getMintExchangeValidator} from "../utils";
 import {Asset, AUTH_TOKEN_NAME} from "../types";
-import {Constr, Data, fromText} from "@lucid-evolution/lucid";
+import {Constr, Data, fromText, LucidEvolution} from "@lucid-evolution/lucid";
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
 import {getPublicKeyHash, submitTx} from "../../../hello-world/common";
 
-export async function mintAuthToken(privateKey: string) {
-    const lucid = await getLucidOgmiosInstance();
-    lucid.selectWallet.fromPrivateKey(privateKey);
+export class AuthenMintingPolicy {
+    private readonly adminPrivateKey: string;
+    private lucid: LucidEvolution | undefined;
 
-    const publicKeyHash = getPublicKeyHash(privateKey);
+    constructor(adminPrivateKey: string) {
+        this.adminPrivateKey = adminPrivateKey;
+    }
 
-    const mintAuthValidator = getMintAuthValidator(publicKeyHash);
-    const authAssetName = `${mintAuthValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
-    const mintRedeemer = Data.to(new Constr(0, []));
+    private async getLucid() {
+        if (this.lucid) {
+            return this.lucid;
+        }
 
-    const tx = await lucid
-        .newTx()
-        .attach.MintingPolicy(mintAuthValidator.policyScripts)
-        .mintAssets({[authAssetName]: BigInt(1)}, mintRedeemer)
-        .complete();
+        const lucid = await getLucidOgmiosInstance();
+        lucid.selectWallet.fromPrivateKey(this.adminPrivateKey);
+        return lucid;
+    }
 
-    await submitTx(tx, lucid);
-}
 
-export async function createLiquidityPoolUTxO(privateKey: string, tradeAsset: Asset) {
-    const lucid = await getLucidOgmiosInstance();
-    lucid.selectWallet.fromPrivateKey(privateKey);
+    private async mintAuthToken() {
+        const lucid = await this.getLucid();
 
-    const publicKeyHash = getPublicKeyHash(privateKey);
+        const publicKeyHash = getPublicKeyHash(this.adminPrivateKey);
 
-    const mintAuthTokenValidator = getMintAuthValidator(publicKeyHash)
-    const mintExchangeValidator = getMintExchangeValidator(publicKeyHash, tradeAsset);
+        const mintAuthValidator = getMintAuthValidator(publicKeyHash);
+        const authAssetName = `${mintAuthValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
+        const mintRedeemer = Data.to(new Constr(0, []));
 
-    const authAssetName = `${mintAuthTokenValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
+        const tx = await lucid
+            .newTx()
+            .attach.MintingPolicy(mintAuthValidator.policyScripts)
+            .mintAssets({[authAssetName]: BigInt(1)}, mintRedeemer)
+            .complete();
 
-    const tx = await lucid
-        .newTx()
-        .pay.ToContract(
-            mintExchangeValidator.lockAddress,
-            {kind: 'inline', value: Data.to(new Constr(0, [BigInt(0)]))},
-            {
-                [authAssetName]: BigInt(1),
-                "lovelace": BigInt(0)
-            }
-        )
-        .complete();
+        await submitTx(tx, lucid);
+    }
 
-    await submitTx(tx, lucid);
+    public async createLiquidityPoolUTxO(tradeAsset: Asset) {
+        await this.mintAuthToken();
+        const lucid = await this.getLucid();
+        const publicKeyHash = getPublicKeyHash(this.adminPrivateKey);
+
+        const mintAuthTokenValidator = getMintAuthValidator(publicKeyHash)
+        const mintExchangeValidator = getMintExchangeValidator(publicKeyHash, tradeAsset);
+
+        const authAssetName = `${mintAuthTokenValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
+
+        const tx = await lucid
+            .newTx()
+            .pay.ToContract(
+                mintExchangeValidator.lockAddress,
+                {kind: 'inline', value: Data.to(new Constr(0, [BigInt(0)]))},
+                {
+                    [authAssetName]: BigInt(1),
+                    "lovelace": BigInt(0)
+                }
+            )
+            .complete();
+
+        await submitTx(tx, lucid);
+    }
 }

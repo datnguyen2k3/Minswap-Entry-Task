@@ -10,7 +10,8 @@ import {
 } from "../types";
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
 import {getMintAuthValidator, getMintExchangeValidator, isEqualRational} from "../utils";
-import {createLiquidityPoolUTxO, mintAuthToken} from "./authen-minting-policy";
+import {AuthenMintingPolicy} from "./authen-minting-policy";
+import {mintTrashToken} from "./mint-trash-token";
 
 class Exchange {
     private readonly lucid: LucidEvolution | undefined;
@@ -385,10 +386,12 @@ function main() {
         trashAsset
     )
 
-    // mintAuthToken(privateKey).then(() => console.log("Auth token minted successfully"));
+    const authenMintingPolicy = new AuthenMintingPolicy(privateKey);
 
-    // createLiquidityPoolUTxO(privateKey, minAsset).then(() => console.log("Liquidity pool UTxO for min token created successfully"));
-    // createLiquidityPoolUTxO(privateKey, trashAsset).then(() => console.log("Liquidity pool UTxO for trash token successfully"));
+    // mintTrashToken(getPrivateKeyFrom(PRIVATE_KEY_PATH)).then(() => console.log("Mint Trash Token successfully!"));
+
+    // authenMintingPolicy.createLiquidityPoolUTxO(minAsset).then(() => console.log("Liquidity pool created successfully for min token"));
+    // authenMintingPolicy.createLiquidityPoolUTxO(trashAsset).then(() => console.log("Liquidity pool created successfully for trash token"));
 
     // minExchange.addLiquidity(BigInt(15550000)).then(() => console.log("Liquidity added successfully for min token"));
     // minExchange.removeLiquidity(BigInt(103400)).then(() => console.log("Liquidity removed successfully for min token"));
