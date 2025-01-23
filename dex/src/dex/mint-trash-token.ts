@@ -1,6 +1,6 @@
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
 import {readValidators} from "../utils";
-import {PLUTUS_PATH, PRIVATE_KEY_PATH} from "../types";
+import {PLUTUS_PATH, PRIVATE_KEY_PATH_TEST} from "../types";
 import {Constr, Data, fromText} from "@lucid-evolution/lucid";
 import {getPrivateKeyFrom, submitTx} from "../../../hello-world/common";
 

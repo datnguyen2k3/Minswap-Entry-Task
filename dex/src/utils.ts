@@ -1,7 +1,7 @@
 import {getValidator, getValidatorFrom, toObject} from "../../hello-world/common";
 import {
     applyDoubleCborEncoding,
-    applyParamsToScript,
+    applyParamsToScript, CML,
     Constr, Data,
     fromText, LucidEvolution, validatorToAddress,
     validatorToScriptHash
@@ -89,4 +89,13 @@ export function getExchangeValidator(adminPublicKeyHash: string, tradeAsset?: As
         PLUTUS_PATH,
         [tradeTokenAsset, authTokenAsset]
     );
+}
+
+export function validatePrivateKey(privateKey: string): boolean {
+    try {
+        CML.PrivateKey.from_bech32(privateKey);
+        return true;
+    } catch (e) {
+        return false;
+    }
 }

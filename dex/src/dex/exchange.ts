@@ -5,13 +5,16 @@ import {
     AUTH_TOKEN_NAME,
     INIT_LP_TOKEN_AMOUNT,
     LIQUIDITY_POOL_INFO_SCHEME,
-    LP_TOKEN_NAME, MIN_TOKEN_NAME, MIN_TOKEN_POLICY_ID, Validators,
-    PRIVATE_KEY_PATH
+    LP_TOKEN_NAME,
+    MIN_TOKEN_NAME,
+    MIN_TOKEN_POLICY_ID,
+    PRIVATE_KEY_PATH_TEST,
+    Validators
 } from "../types";
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
 import {getAuthValidator, getExchangeValidator, isEqualRational} from "../utils";
 import {AuthenMintingPolicy} from "./authen-minting-policy";
-import {mintTrashToken} from "./mint-trash-token";
+import {SIMPLE} from "cbor/types/lib/constants";
 
 class Exchange {
     private readonly lucid: LucidEvolution | undefined;
@@ -64,18 +67,89 @@ class Exchange {
         throw new Error("Liquidity pool UTxO not found");
     }
 
-    public static getReceivedLovelace(lpUTxO: UTxO, tradeTokenAmount: bigint, tradeTokenName: string) {
+    public static getReceivedLovelaceBySwapTradeToken(lpUTxO: UTxO, tradeTokenAmount: bigint, tradeTokenName: string) {
         const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
         const reservedTradeToken = lpUTxO.assets[tradeTokenName] || BigInt(0);
 
         return tradeTokenAmount * reservedLovelace * BigInt(1000) / ((reservedTradeToken + tradeTokenAmount) * BigInt(997));
     }
 
-    public static getReceivedTradeToken(lpUTxO: UTxO, lovelaceAmount: bigint, tradeTokenName: string) {
+    public static getReceivedTradeTokenBySwapAda(lpUTxO: UTxO, lovelaceAmount: bigint, tradeTokenName: string) {
         const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
         const reservedTradeToken = lpUTxO.assets[tradeTokenName] || BigInt(0);
 
         return lovelaceAmount * reservedTradeToken * BigInt(1000) / ((reservedLovelace + lovelaceAmount) * BigInt(997));
+    }
+
+    public static getAddedAdaByAddedTradeToken(lpUTxO: UTxO, tradeTokenAmount: bigint, tradeTokenName: string) {
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const reservedTradeToken = lpUTxO.assets[tradeTokenName] || BigInt(0);
+
+        return tradeTokenAmount * reservedLovelace / reservedTradeToken;
+    }
+
+    public static getAddedTradeTokenByAddedAda(lpUTxO: UTxO, lovelaceAmount: bigint, tradeTokenName: string) {
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const reservedTradeToken = lpUTxO.assets[tradeTokenName] || BigInt(0);
+
+        return lovelaceAmount * reservedTradeToken / reservedLovelace;
+    }
+
+    public static getLpTokenByAddedLiquidity(lpUTxO: UTxO, addedLovelace: bigint, addedTradeToken: bigint, tradeTokenName: string) {
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const reservedTradeToken = lpUTxO.assets[tradeTokenName] || BigInt(0);
+        const totalSupply = Exchange.getTotalSupply(lpUTxO);
+
+        if (totalSupply === BigInt(0)) {
+            if (addedLovelace === BigInt(0) || addedTradeToken === BigInt(0)) {
+                throw new Error("Added liquidity for first time must be greater than 0");
+            }
+
+            return BigInt(INIT_LP_TOKEN_AMOUNT);
+        }
+
+        return BigInt(Math.min(
+            Number(addedLovelace * totalSupply / reservedLovelace),
+            Number(addedTradeToken * totalSupply / reservedTradeToken)
+        ))
+    }
+
+    public static getRemovedLoveLaceByRemovedLpToken(lpUTxO: UTxO, burnedLpToken: bigint) {
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const totalSupply = Exchange.getTotalSupply(lpUTxO);
+
+        const removedLovelace =  burnedLpToken * reservedLovelace / totalSupply;
+
+        if (!isEqualRational(removedLovelace, reservedLovelace, burnedLpToken, totalSupply)) {
+            throw new Error("LP token is not enough to burned");
+        }
+
+        return removedLovelace;
+    }
+
+    public static getRemovedTradeTokenByRemovedLpToken(lpUTxO: UTxO, burnedLpToken: bigint, tradeTokenName: string) {
+        const reservedTradeToken = lpUTxO.assets[tradeTokenName] || BigInt(0);
+        const totalSupply = Exchange.getTotalSupply(lpUTxO);
+
+        const removedTradeToken = burnedLpToken * reservedTradeToken / totalSupply;
+
+        if (!isEqualRational(removedTradeToken, reservedTradeToken, burnedLpToken, totalSupply)) {
+            throw new Error("LP token is not enough to burned");
+        }
+
+        return removedTradeToken;
+    }
+
+    public static validateAddedLiquidity(lpUTxO: UTxO, addedLovelace: bigint, addedTradeToken: bigint, tradeTokenName: string) {
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const reservedTradeToken = lpUTxO.assets[tradeTokenName] || BigInt(0);
+
+        return isEqualRational(
+            addedTradeToken,
+            addedLovelace,
+            reservedTradeToken,
+            reservedLovelace,
+        )
     }
 
     private async getLucid() {
@@ -86,6 +160,79 @@ class Exchange {
         const lucid = await getLucidOgmiosInstance();
         lucid.selectWallet.fromPrivateKey(this.privateKey);
         return lucid
+    }
+
+    public async createAddedLiquidityTx(lpUTxO: UTxO, addedLovelace: bigint, addedTradeToken: bigint, receivedLpToken: bigint) {
+        const lucid = await this.getLucid();
+        const inputUTxOs = await lucid.wallet().getUtxos();
+        inputUTxOs.push(lpUTxO);
+
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
+
+        const lpTokenSupply = Exchange.getTotalSupply(lpUTxO);
+
+        return await lucid
+            .newTx()
+            .collectFrom(inputUTxOs, Exchange.ADD_REDEEMER)
+            .attach.MintingPolicy(this.exchangeValidator.policyScripts)
+            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
+            .mintAssets(
+                {[this.lpAssetName]: receivedLpToken},
+                Exchange.ADD_REDEEMER
+            )
+            .pay.ToContract(
+                this.exchangeValidator.lockAddress,
+                {
+                    kind: 'inline',
+                    value: Data.to(new Constr(0, [BigInt(lpTokenSupply) + receivedLpToken]))
+                }, {
+                    [this.authAssetName]: BigInt(1),
+                    [this.tradeAssetName]: BigInt(reservedTradeToken) + BigInt(addedTradeToken),
+                    "lovelace": reservedLovelace + addedLovelace
+                }
+            )
+            .complete();
+    }
+
+    public async createRemoveLiquidityTx(lpUTxO: UTxO, burnedLpToken: bigint, removedLovelace: bigint, removedTradeToken: bigint) {
+        const lucid = await this.getLucid();
+
+        const lpTokenSupply = Exchange.getTotalSupply(lpUTxO);
+        const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
+        const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
+
+        const inputUTxOs = await lucid.wallet().getUtxos();
+        inputUTxOs.push(lpUTxO);
+
+        return await lucid
+            .newTx()
+            .collectFrom(inputUTxOs, Exchange.REMOVE_REDEEMER)
+            .attach.MintingPolicy(this.exchangeValidator.policyScripts)
+            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
+            .mintAssets(
+                {[this.lpAssetName]: -burnedLpToken},
+                Exchange.REMOVE_REDEEMER
+            )
+            .pay.ToContract(
+                this.exchangeValidator.lockAddress,
+                {
+                    kind: 'inline',
+                    value: Data.to(new Constr(0, [BigInt(lpTokenSupply) - burnedLpToken]))
+                }, {
+                    lovelace: reservedLovelace - removedLovelace,
+                    [this.authAssetName]: BigInt(1),
+                    [this.tradeAssetName]: reservedTradeToken - removedTradeToken
+                }
+            )
+            .pay.ToAddress(
+                await lucid.wallet().address(),
+                {
+                    lovelace: removedLovelace,
+                    [this.tradeAssetName]: removedTradeToken
+                }
+            )
+            .complete();
     }
 
     private async handleFirstTimeAddedLiquidity(addedLovelace: bigint, lpUTxO: UTxO) {
@@ -237,7 +384,7 @@ class Exchange {
         const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
         const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
 
-        const receivedLovelace = Exchange.getReceivedLovelace(lpUTxO, swappedTradeToken, this.tradeAssetName);
+        const receivedLovelace = Exchange.getReceivedLovelaceBySwapTradeToken(lpUTxO, swappedTradeToken, this.tradeAssetName);
         console.log("Received lovelace:", receivedLovelace);
 
         const inputUTxOs = await lucid.wallet().getUtxos();
@@ -278,7 +425,7 @@ class Exchange {
         const reservedLovelace = lpUTxO.assets["lovelace"] || BigInt(0);
         const reservedTradeToken = lpUTxO.assets[this.tradeAssetName] || BigInt(0);
 
-        const receivedTradeToken = Exchange.getReceivedTradeToken(lpUTxO, swappedLovelace, this.tradeAssetName);
+        const receivedTradeToken = Exchange.getReceivedTradeTokenBySwapAda(lpUTxO, swappedLovelace, this.tradeAssetName);
         console.log("Received trade token:", receivedTradeToken);
 
         const inputUTxOs = await lucid.wallet().getUtxos();
@@ -314,11 +461,11 @@ class Exchange {
         console.log("Swapped trade token:", swappedTradeToken);
         const lucid = await this.getLucid();
         const tradeTokenLpUTxO = await Exchange.getLiquidityPoolUTxO(lucid, this.adminPublicKeyHash, this.tradeAsset);
-        const swappedLovelace = Exchange.getReceivedLovelace(tradeTokenLpUTxO, swappedTradeToken, this.tradeAssetName);
+        const swappedLovelace = Exchange.getReceivedLovelaceBySwapTradeToken(tradeTokenLpUTxO, swappedTradeToken, this.tradeAssetName);
 
         const otherAssetName = `${otherAsset.policyId}${fromText(otherAsset.tokenName)}`;
         const otherExchangeLpUTxO = await Exchange.getLiquidityPoolUTxO(lucid, this.adminPublicKeyHash, otherAsset);
-        const receivedOtherToken = Exchange.getReceivedTradeToken(otherExchangeLpUTxO, swappedLovelace, otherAssetName);
+        const receivedOtherToken = Exchange.getReceivedTradeTokenBySwapAda(otherExchangeLpUTxO, swappedLovelace, otherAssetName);
         console.log("Received other token:", receivedOtherToken);
 
         const otherExchangeValidator = getExchangeValidator(this.adminPublicKeyHash, otherAsset);
@@ -360,7 +507,7 @@ class Exchange {
 }
 
 function main() {
-    const privateKey = getPrivateKeyFrom(PRIVATE_KEY_PATH);
+    const privateKey = getPrivateKeyFrom(PRIVATE_KEY_PATH_TEST);
 
     const minAsset: Asset = {
         policyId: MIN_TOKEN_POLICY_ID,

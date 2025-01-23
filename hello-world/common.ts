@@ -62,6 +62,11 @@ export function getPrivateKeyFrom(path_str: string): string {
     return fs.readFileSync(absolutePath, "utf8");
 }
 
+export function savePrivateKey(privateKey: string, path_str: string): void {
+    const absolutePath = path.resolve(path_str);
+    fs.writeFileSync(absolutePath, privateKey);
+}
+
 export function getPublicKeyHash(privateKeyBech32: string): string {
     const privateKey = CML.PrivateKey.from_bech32(privateKeyBech32);
     const publicKey = privateKey.to_public();
