@@ -83,25 +83,26 @@ Responsible for trading between 2 tokens. It uses the Constant Product Formula (
   + `SwapToToken`: swap ADA to token.
 - Validation:
   + `Add`:
-    * Check inputs just have one UTxO has one Authen token. Set this UTxO as the Pool Liquidity UTxO.
+    * Check inputs and outputs of transaction just have one Pool Liquidity UTxO has same policyId.
     * Calculate the amount of token to be added to the Pool Liquidity UTxO
     * Validate the ration between the trade token and ADA in inputs need to equal the ration of Liquidity Pool.
-    * Mint LP token to the user by the ration of added Token and reserve token in LP.
+    * Validate the ration between the added token and the reserve token in LP equals the ration between the minted LP token and the total supply of LP token.
+    * Validate the total supply of LP token is added correctly.
   + `Remove`:
-    * Check if the input UTxO is the same as the Pool Liquidity UTxO.
+    * Check inputs and outputs of transaction just have one Pool Liquidity UTxO has same policyId.
     * Calculate the amount of token to be removed to the Pool Liquidity UTxO
-    * Validate the ration between the burned LP token and the total supply of LP token equals the ration of the removed token and the reserve token in LP.
-    * Burn LP token from the user.
+    * Validate the ration between the burned LP token and the total supply of LP token equals the ration of the removed token, ADA and the reserve token, ADA in LP.
+    * Validate the total supply of LP token is removed correctly.
   + `SwapToAda`:
-    * Check if the input UTxO is the same as the Pool Liquidity UTxO.
-    * Calculate the amount of ADA to be swapped.
-    * Validate the ration between the input trade token amount and trade token reserve equals to the ration between the received ADA amount and ADA reserve.
-    * Swap token to ADA.
+    * Check inputs and outputs of transaction just have one Pool Liquidity UTxO has same policyId.
+    * Calculate the amount of ADA to be added and the amount of token to be removed in the Pool Liquidity UTxO.
+    * Validate the amount of removed ADA need to match with the amount of added trade token.
+    * Validate the total supply of LP token is not changed.
   + `SwapToToken`:
-    * Check if the input UTxO is the same as the Pool Liquidity UTxO.
-    * Calculate the amount of token to be swapped.
-    * Validate the ration between the input ADA amount and ADA reserve equals to the ration between the received trade token amount and trade token reserve.
-    * Swap ADA to token.
+    * Check inputs and outputs of transaction just have one Pool Liquidity UTxO has same policyId.
+    * Calculate the amount of token to be added and the amount of ADA to be removed in the Pool Liquidity UTxO.
+    * Validate the amount of removed token need to match with the amount of added ADA.
+    * Validate the total supply of LP token is not changed.
 
 ### 3.4 Transactions
 
@@ -110,10 +111,10 @@ Admin mints Authen Token to create the Pool Liquidity UTxO.
 
 Transaction structure:
 - Inputs:
-    + Admin's UTxO:
+    + Admin's UTxO
 - Mint:
     + Redemeer: None
-    + Token name: "Authen Token"
+    + Token name: "AUTH_TOKEN"
     + Value: 1
 - Outputs:
     + Admin's UTxO:
@@ -137,10 +138,11 @@ Transaction structure:
         + `X` trade token
         + `Y` ADA
         + 1 Authen Token
+      + Redeemer: `Add`
 
 - Mint:
     + Redemeer: `Add`
-    + Token name: `LP token`
+    + Token name: `LP_TOKEN`
     + Value: 
         + `min(x/X, y/Y) * C` LP token
 
@@ -172,9 +174,10 @@ Transaction structure:
         + `X` trade token
         + `Y` ADA
         + 1 Authen Token
+      + Redeemer: `Remove`
 - Mint:
   + Redemeer: `Remove`
-  + Token name: `LP token`
+  + Token name: `LP_TOKEN`
   + Value: 
       + `-c` LP token
 
@@ -183,7 +186,6 @@ Transaction structure:
       + Value:
           + `c/C * X` trade token
           + `c/C * Y` ADA
-          + 0 LP token
     + Pool Liquidity UTxO:
       + Value: 
           + `X - c/C * X` trade token
@@ -207,7 +209,7 @@ Transaction structure:
         + `X` trade token
         + `Y` ADA
         + 1 Authen Token
-    + Redeemer: `SwapToAda`
+      + Redeemer: `SwapToAda`
 - Outputs:
     + User's UTxO:
       + Value:
@@ -236,7 +238,7 @@ Transaction structure:
         + `X` trade token
         + `Y` ADA
         + 1 Authen Token
-    + Redeemer: `SwapToToken`
+      + Redeemer: `SwapToToken`
 - Outputs:
     + User's UTxO:
       + Value:
@@ -278,7 +280,7 @@ Transaction structure:
 - Outputs:
     + User's UTxO:
       + Value:
-          + `z * X2 * 1000 / (997 * (Y2 + y)` token B
+          + `z * X2 * 1000 / (997 * (Y2 + z)` token B
     + Pool Liquidity UTxO of token A:
       + Value: 
           + `X1 + x` token A
