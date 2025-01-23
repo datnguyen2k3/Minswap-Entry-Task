@@ -54,9 +54,9 @@ class Exchange {
         const utxos = await lucid.utxosAt(mintExchangeValidator.lockAddress);
         for (const utxo of utxos) {
             if (utxo.datum && utxo.assets[authAssetName] === BigInt(1)) {
-                console.log("Liquidity pool UTxO:", utxo);
+                // console.log("Liquidity pool UTxO:", utxo);
                 const lpInfo = toObject(utxo.datum, LIQUIDITY_POOL_INFO_SCHEME);
-                console.log("Liquidity pool info:", lpInfo);
+                // console.log("Liquidity pool info:", lpInfo);
                 return utxo;
             }
         }

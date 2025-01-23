@@ -390,7 +390,6 @@ export class OgmiosProvider implements Provider {
                 const isConfirmed = await this.isConfirmed(txHash);
                 if (isConfirmed) {
                     clearInterval(intervalId);
-                    console.log(await this.getUtxosByOutRef([{txHash: txHash, outputIndex: 0}]));
                     resolve(true);
                 }
                 count++;
