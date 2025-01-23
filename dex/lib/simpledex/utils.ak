@@ -105,7 +105,10 @@ pub fn validate_minted_token(lp_input: Input, lp_output: Output, trade_token: As
             reserved_lovelace, reserved_trade_token
         )
 
-        expect lp_asset_amount == input_supply * added_lovelace / reserved_lovelace
+        expect lp_asset_amount == math.min(
+            input_supply * added_lovelace / reserved_lovelace,
+            input_supply * added_trade_token / reserved_trade_token
+        )
         output_supply == lp_asset_amount + input_supply
     }
 }
