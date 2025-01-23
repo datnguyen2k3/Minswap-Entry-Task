@@ -1,5 +1,5 @@
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
-import {readMintValidators} from "../utils";
+import {readValidators} from "../utils";
 import {PLUTUS_PATH, PRIVATE_KEY_PATH} from "../types";
 import {Constr, Data, fromText} from "@lucid-evolution/lucid";
 import {getPrivateKeyFrom, submitTx} from "../../../hello-world/common";
@@ -8,7 +8,7 @@ export async function mintTrashToken(privateKey: string) {
     const lucid = await getLucidOgmiosInstance();
     lucid.selectWallet.fromPrivateKey(privateKey);
 
-    const mintTrashValidator = readMintValidators(
+    const mintTrashValidator = readValidators(
         "mint_trash_token.mint_trash_token.mint",
         PLUTUS_PATH,
         []

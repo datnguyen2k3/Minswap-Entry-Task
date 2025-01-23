@@ -1,4 +1,4 @@
-import {getMintAuthValidator, getMintExchangeValidator} from "../utils";
+import {getAuthValidator, getExchangeValidator} from "../utils";
 import {Asset, AUTH_TOKEN_NAME} from "../types";
 import {Constr, Data, fromText, LucidEvolution} from "@lucid-evolution/lucid";
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
@@ -28,7 +28,7 @@ export class AuthenMintingPolicy {
 
         const publicKeyHash = getPublicKeyHash(this.adminPrivateKey);
 
-        const mintAuthValidator = getMintAuthValidator(publicKeyHash);
+        const mintAuthValidator = getAuthValidator(publicKeyHash);
         const authAssetName = `${mintAuthValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
         const mintRedeemer = Data.to(new Constr(0, []));
 
@@ -46,8 +46,8 @@ export class AuthenMintingPolicy {
         const lucid = await this.getLucid();
         const publicKeyHash = getPublicKeyHash(this.adminPrivateKey);
 
-        const mintAuthTokenValidator = getMintAuthValidator(publicKeyHash)
-        const mintExchangeValidator = getMintExchangeValidator(publicKeyHash, tradeAsset);
+        const mintAuthTokenValidator = getAuthValidator(publicKeyHash)
+        const mintExchangeValidator = getExchangeValidator(publicKeyHash, tradeAsset);
 
         const authAssetName = `${mintAuthTokenValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
 

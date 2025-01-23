@@ -13,7 +13,7 @@ export const PRIVATE_KEY_PATH = "/home/dat/Desktop/Minswap-Entry-Task/hello-worl
 export const PLUTUS_PATH = "/home/dat/Desktop/Minswap-Entry-Task/dex/plutus.json"
 export const INIT_LP_TOKEN_AMOUNT = 1000000
 
-export type MintValidators = {
+export type Validators = {
     policyScripts: Script;
     policyId: string;
     lockAddress: string;

@@ -12,11 +12,11 @@ import {
     LIQUIDITY_POOL_INFO_SCHEME, MIN_TOKEN_NAME, MIN_TOKEN_POLICY_ID,
     MINT_AUTH_TOKEN_TITLE,
     MINT_EXCHANGE_TITLE,
-    MintValidators,
+    Validators,
     PLUTUS_PATH
 } from "./types";
 
-export function readMintValidators(validator_title: string, plutusPath: string, params: Data[]): MintValidators {
+export function readValidators(validator_title: string, plutusPath: string, params: Data[]): Validators {
     const validator = getValidatorFrom(validator_title, plutusPath)
 
     const paramScripts = applyParamsToScript(
@@ -56,16 +56,16 @@ export function  isEqualRational(a1: bigint, b1: bigint, a2: bigint, b2: bigint)
     return 100 * Math.abs(x1 * y2 - y1 * x2) <= y1 * y2
 }
 
-export function getMintAuthValidator(adminPublicKeyHash: string) : MintValidators{
-    return readMintValidators(
+export function getAuthValidator(adminPublicKeyHash: string) : Validators{
+    return readValidators(
         MINT_AUTH_TOKEN_TITLE,
         PLUTUS_PATH,
         [adminPublicKeyHash]
     );
 }
 
-export function getMintExchangeValidator(adminPublicKeyHash: string, tradeAsset?: Asset) : MintValidators{
-    const mintAuthValidators = getMintAuthValidator(adminPublicKeyHash);
+export function getExchangeValidator(adminPublicKeyHash: string, tradeAsset?: Asset) : Validators{
+    const mintAuthValidators = getAuthValidator(adminPublicKeyHash);
 
     let tradeTokenAsset = new Constr(0, [
         MIN_TOKEN_POLICY_ID,
@@ -84,7 +84,7 @@ export function getMintExchangeValidator(adminPublicKeyHash: string, tradeAsset?
         fromText(AUTH_TOKEN_NAME)
     ]);
 
-    return readMintValidators(
+    return readValidators(
         MINT_EXCHANGE_TITLE,
         PLUTUS_PATH,
         [tradeTokenAsset, authTokenAsset]

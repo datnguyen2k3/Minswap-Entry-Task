@@ -5,19 +5,19 @@ import {
     AUTH_TOKEN_NAME,
     INIT_LP_TOKEN_AMOUNT,
     LIQUIDITY_POOL_INFO_SCHEME,
-    LP_TOKEN_NAME, MIN_TOKEN_NAME, MIN_TOKEN_POLICY_ID, MintValidators,
+    LP_TOKEN_NAME, MIN_TOKEN_NAME, MIN_TOKEN_POLICY_ID, Validators,
     PRIVATE_KEY_PATH
 } from "../types";
 import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
-import {getMintAuthValidator, getMintExchangeValidator, isEqualRational} from "../utils";
+import {getAuthValidator, getExchangeValidator, isEqualRational} from "../utils";
 import {AuthenMintingPolicy} from "./authen-minting-policy";
 import {mintTrashToken} from "./mint-trash-token";
 
 class Exchange {
     private readonly lucid: LucidEvolution | undefined;
     private readonly privateKey: string;
-    private readonly mintExchangeValidator: MintValidators;
-    private readonly mintAuthValidator: MintValidators;
+    private readonly exchangeValidator: Validators;
+    private readonly authValidator: Validators;
     private readonly tradeAsset: Asset;
     private readonly tradeAssetName: string;
     private readonly lpAssetName: string;
@@ -31,13 +31,13 @@ class Exchange {
 
     constructor(privateKey: string, adminPublicKeyHash: string, tradeAsset: Asset) {
         this.privateKey = privateKey;
-        this.mintExchangeValidator = getMintExchangeValidator(adminPublicKeyHash, tradeAsset);
-        this.mintAuthValidator = getMintAuthValidator(adminPublicKeyHash);
+        this.exchangeValidator = getExchangeValidator(adminPublicKeyHash, tradeAsset);
+        this.authValidator = getAuthValidator(adminPublicKeyHash);
         this.adminPublicKeyHash = adminPublicKeyHash;
         this.tradeAsset = tradeAsset;
         this.tradeAssetName = `${tradeAsset.policyId}${fromText(tradeAsset.tokenName)}`;
-        this.lpAssetName = `${this.mintExchangeValidator.policyId}${fromText(LP_TOKEN_NAME)}`;
-        this.authAssetName = `${this.mintAuthValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
+        this.lpAssetName = `${this.exchangeValidator.policyId}${fromText(LP_TOKEN_NAME)}`;
+        this.authAssetName = `${this.authValidator.policyId}${fromText(AUTH_TOKEN_NAME)}`;
     }
 
     public static getTotalSupply(lpUTxO: UTxO) {
@@ -46,8 +46,8 @@ class Exchange {
     }
 
     public static async getLiquidityPoolUTxO(lucid: LucidEvolution, adminPublicKeyHash: string, tradeAsset: Asset) {
-        const mintAuthValidators = getMintAuthValidator(adminPublicKeyHash);
-        const mintExchangeValidator = getMintExchangeValidator(adminPublicKeyHash, tradeAsset);
+        const mintAuthValidators = getAuthValidator(adminPublicKeyHash);
+        const mintExchangeValidator = getExchangeValidator(adminPublicKeyHash, tradeAsset);
 
         const authAssetName = `${mintAuthValidators.policyId}${fromText(AUTH_TOKEN_NAME)}`;
 
@@ -112,14 +112,14 @@ class Exchange {
         const tx = await lucid
             .newTx()
             .collectFrom(inputUTxOs, Exchange.ADD_REDEEMER)
-            .attach.MintingPolicy(this.mintExchangeValidator.policyScripts)
-            .attach.SpendingValidator(this.mintExchangeValidator.policyScripts)
+            .attach.MintingPolicy(this.exchangeValidator.policyScripts)
+            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
             .mintAssets(
                 {[this.lpAssetName]: receivedLpToken},
                 Exchange.ADD_REDEEMER
             )
             .pay.ToContract(
-                this.mintExchangeValidator.lockAddress,
+                this.exchangeValidator.lockAddress,
                 {
                     kind: 'inline',
                     value: Data.to(new Constr(0, [BigInt(lpTokenSupply) + receivedLpToken]))
@@ -199,14 +199,14 @@ class Exchange {
         const tx = await lucid
             .newTx()
             .collectFrom(inputUTxOs, Exchange.REMOVE_REDEEMER)
-            .attach.MintingPolicy(this.mintExchangeValidator.policyScripts)
-            .attach.SpendingValidator(this.mintExchangeValidator.policyScripts)
+            .attach.MintingPolicy(this.exchangeValidator.policyScripts)
+            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
             .mintAssets(
                 {[this.lpAssetName]: -burnedLpToken},
                 Exchange.REMOVE_REDEEMER
             )
             .pay.ToContract(
-                this.mintExchangeValidator.lockAddress,
+                this.exchangeValidator.lockAddress,
                 {
                     kind: 'inline',
                     value: Data.to(new Constr(0, [BigInt(lpTokenSupply) - burnedLpToken]))
@@ -246,9 +246,9 @@ class Exchange {
         const tx = await lucid
             .newTx()
             .collectFrom(inputUTxOs, Exchange.SWAP_TO_ADA_REDEEMER)
-            .attach.SpendingValidator(this.mintExchangeValidator.policyScripts)
+            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
             .pay.ToContract(
-                this.mintExchangeValidator.lockAddress,
+                this.exchangeValidator.lockAddress,
                 {
                     kind: 'inline',
                     value: Data.to(new Constr(0, [BigInt(lpTokenSupply)]))
@@ -287,9 +287,9 @@ class Exchange {
         const tx = await lucid
             .newTx()
             .collectFrom(inputUTxOs, Exchange.SWAP_TO_TOKEN_REDEEMER)
-            .attach.SpendingValidator(this.mintExchangeValidator.policyScripts)
+            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
             .pay.ToContract(
-                this.mintExchangeValidator.lockAddress,
+                this.exchangeValidator.lockAddress,
                 {
                     kind: 'inline',
                     value: Data.to(new Constr(0, [BigInt(lpTokenSupply)]))
@@ -317,24 +317,22 @@ class Exchange {
         const swappedLovelace = Exchange.getReceivedLovelace(tradeTokenLpUTxO, swappedTradeToken, this.tradeAssetName);
 
         const otherAssetName = `${otherAsset.policyId}${fromText(otherAsset.tokenName)}`;
-        const otherTokenLpUTxO = await Exchange.getLiquidityPoolUTxO(lucid, this.adminPublicKeyHash, otherAsset);
-        const receivedOtherToken = Exchange.getReceivedTradeToken(otherTokenLpUTxO, swappedLovelace, otherAssetName);
+        const otherExchangeLpUTxO = await Exchange.getLiquidityPoolUTxO(lucid, this.adminPublicKeyHash, otherAsset);
+        const receivedOtherToken = Exchange.getReceivedTradeToken(otherExchangeLpUTxO, swappedLovelace, otherAssetName);
         console.log("Received other token:", receivedOtherToken);
 
-        const tradeContractAddress = this.mintExchangeValidator.lockAddress;
-        const otherTrashValidator = getMintExchangeValidator(this.adminPublicKeyHash, otherAsset);
-        const otherContractAddress = otherTrashValidator.lockAddress;
+        const otherExchangeValidator = getExchangeValidator(this.adminPublicKeyHash, otherAsset);
 
         const inputUTxOs = await lucid.wallet().getUtxos();
 
         const tx = await lucid
             .newTx()
             .collectFrom(inputUTxOs.concat(tradeTokenLpUTxO), Exchange.SWAP_TO_ADA_REDEEMER)
-            .collectFrom([otherTokenLpUTxO], Exchange.SWAP_TO_TOKEN_REDEEMER)
-            .attach.SpendingValidator(this.mintExchangeValidator.policyScripts)
-            .attach.SpendingValidator(otherTrashValidator.policyScripts)
+            .collectFrom([otherExchangeLpUTxO], Exchange.SWAP_TO_TOKEN_REDEEMER)
+            .attach.SpendingValidator(this.exchangeValidator.policyScripts)
+            .attach.SpendingValidator(otherExchangeValidator.policyScripts)
             .pay.ToContract(
-                tradeContractAddress,
+                this.exchangeValidator.lockAddress,
                 {
                     kind: 'inline',
                     value: Data.to(new Constr(0, [BigInt(Exchange.getTotalSupply(tradeTokenLpUTxO))]))
@@ -345,14 +343,14 @@ class Exchange {
                 }
             )
             .pay.ToContract(
-                otherContractAddress,
+                otherExchangeValidator.lockAddress,
                 {
                     kind: 'inline',
-                    value: Data.to(new Constr(0, [BigInt(Exchange.getTotalSupply(otherTokenLpUTxO))]))
+                    value: Data.to(new Constr(0, [BigInt(Exchange.getTotalSupply(otherExchangeLpUTxO))]))
                 }, {
                     [this.authAssetName]: BigInt(1),
-                    lovelace: otherTokenLpUTxO.assets["lovelace"] + swappedLovelace,
-                    [otherAssetName]: otherTokenLpUTxO.assets[otherAssetName] - receivedOtherToken,
+                    lovelace: otherExchangeLpUTxO.assets["lovelace"] + swappedLovelace,
+                    [otherAssetName]: otherExchangeLpUTxO.assets[otherAssetName] - receivedOtherToken,
                 }
             )
             .complete();
