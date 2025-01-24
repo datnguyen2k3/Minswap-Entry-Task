@@ -1,8 +1,12 @@
 import {
-    validatorToAddress,
-    UTxO,
+    CML,
     Data,
-    Datum, TxSignBuilder, LucidEvolution, Validator, CML
+    Datum,
+    LucidEvolution,
+    TxSignBuilder,
+    UTxO,
+    Validator,
+    validatorToAddress
 } from "@lucid-evolution/lucid";
 import fs from "node:fs";
 import * as path from "path";
@@ -73,6 +77,17 @@ export function getPublicKeyHash(privateKeyBech32: string): string {
     const publicKeyHash = publicKey.hash();
 
     return publicKeyHash.to_hex();
+}
+
+export function getAddress(privateKeyBech32: string): string {
+    const privateKey = CML.PrivateKey.from_bech32(privateKeyBech32);
+    const publicKey = privateKey.to_public();
+    const publicKeyHash = publicKey.hash();
+
+    return CML.EnterpriseAddress.new(
+        0,
+        CML.Credential.new_pub_key(publicKeyHash)
+    ).to_address().to_bech32();
 }
 
 export function toCBOR(data: Object, DataSchema: any): Datum {

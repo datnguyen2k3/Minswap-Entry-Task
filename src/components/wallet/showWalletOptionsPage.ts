@@ -2,6 +2,7 @@ import {MainApp} from "../../main";
 import {showInvalidAnswer} from "../showInvalidAnswer";
 import {showWalletInformationPage} from "./showWalletInformationPage";
 import {showMainMenuPage} from "../showMainMenuPage";
+import {showCreateNewWalletPage} from "./showCreateNewWalletPage";
 
 const SET_UP_ACCOUNT_QUETIONS =
 `
@@ -24,6 +25,7 @@ export function showWalletOptionsPage(mainApp: MainApp) {
                 await showWalletInformationPage(mainApp)
                 break;
             case CREATE_NEW_WALLET:
+                showCreateNewWalletPage(mainApp);
                 break;
             case IMPORT_EXISTING_WALLET:
                 break;
