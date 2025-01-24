@@ -3,6 +3,7 @@ import {showInvalidAnswer} from "../showInvalidAnswer";
 import {showWalletInformationPage} from "./showWalletInformationPage";
 import {showMainMenuPage} from "../showMainMenuPage";
 import {showCreateNewWalletPage} from "./showCreateNewWalletPage";
+import {showImportWalletPage} from "./showImportWalletPage";
 
 const SET_UP_ACCOUNT_QUETIONS =
 `
@@ -28,6 +29,7 @@ export function showWalletOptionsPage(mainApp: MainApp) {
                 showCreateNewWalletPage(mainApp);
                 break;
             case IMPORT_EXISTING_WALLET:
+                showImportWalletPage(mainApp);
                 break;
             case GO_BACK:
                 showMainMenuPage(mainApp);
