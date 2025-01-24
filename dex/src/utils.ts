@@ -90,12 +90,3 @@ export function getExchangeValidator(adminPublicKeyHash: string, tradeAsset?: As
         [tradeTokenAsset, authTokenAsset]
     );
 }
-
-export function validatePrivateKey(privateKey: string): boolean {
-    try {
-        CML.PrivateKey.from_bech32(privateKey);
-        return true;
-    } catch (e) {
-        return false;
-    }
-}

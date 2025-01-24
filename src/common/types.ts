@@ -1,0 +1,1 @@
+export const PRIVATE_KEY_PATH = "/home/dat/Desktop/Minswap-Entry-Task/src/resource/me.sk";

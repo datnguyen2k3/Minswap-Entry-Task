@@ -2,7 +2,7 @@ import {OgmiosProvider} from "../../src/providers/ogmios-provider";
 import * as Ogmios from "@cardano-ogmios/client";
 import {Blockfrost, Credential, Lucid, LucidEvolution, OutRef, UTxO} from "@lucid-evolution/lucid";
 import {ProtocolParameters} from "@lucid-evolution/lucid";
-import {sortUTxO} from "../../src/ultis/ultis";
+import {sortUTxO} from "../../src/common/ultis";
 
 describe("#OgmiosProvider", () => {
     let ogmiosProvider: OgmiosProvider;

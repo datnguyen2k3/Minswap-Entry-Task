@@ -21,7 +21,7 @@ import {
     credentialToAddress
 } from "@lucid-evolution/lucid";
 import {TransactionSubmissionClient} from "@cardano-ogmios/client/dist/TransactionSubmission";
-import {parseFraction} from "../ultis/ultis";
+import {parseFraction} from "../common/ultis";
 import {EvaluationResult} from "@cardano-ogmios/client/dist/TransactionSubmission/evaluateTransaction";
 
 export class OgmiosProvider implements Provider {

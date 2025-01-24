@@ -1,33 +1,55 @@
-import {getLucidOgmiosInstance} from "./lucid-instance";
+import * as readline from 'readline';
+import {showMainMenuPage} from "./components/showMainMenuPage";
 import {LucidEvolution} from "@lucid-evolution/lucid";
+import {getLucidOgmiosInstance} from "./lucid-instance";
+import {getPrivateKeyFrom} from "../hello-world/common";
+import {PRIVATE_KEY_PATH} from "./common/types";
+import {getAssets} from "./common/ultis";
 
-const main = async () => {
-    const lucid = await getLucidOgmiosInstance();
-    const seedPhrase = "urge chuckle print picture behind hat client ask sword payment uncover equip alert rely remove crash letter grunt edit twenty test ecology museum dry";
-    lucid.selectWallet.fromSeed(seedPhrase);
+export class MainApp {
+    private readonly rl: readline.Interface;
+    private privateKey: string | undefined;
+    private readonly lucid: LucidEvolution;
 
+    constructor(lucid: LucidEvolution) {
+        this.rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+        this.lucid = lucid;
+    }
+
+    public static async getInstance() {
+        const lucid = await getLucidOgmiosInstance();
+        return new MainApp(lucid);
+    }
+
+    public start() {
+        console.log('Welcome to the app!');
+        showMainMenuPage(this);
+    }
+
+    public getReadline() {
+        return this.rl;
+    }
+
+    public getPrivateKey() {
+        return getPrivateKeyFrom(PRIVATE_KEY_PATH);
+    }
+
+    public getLucid() {
+        this.lucid.selectWallet.fromPrivateKey(this.getPrivateKey());
+        return this.lucid;
+    }
+
+    public async getAddress() {
+        return await this.getLucid().wallet().address();
+    }
 }
 
-const getAddresses = async (lucid: LucidEvolution) => {
-    const addresses = await lucid.wallet().address();
-    console.log("Addresses: ", addresses);
-}
-
-const getBalance = async (lucid: LucidEvolution) => {
-    const utxos = await lucid.wallet().getUtxos();
-    console.log("UTxOs: ", utxos);
-}
-
-const submitTx = async (lucid: LucidEvolution) => {
-    const receive_address = 'addr_test1qqlr0955spgj8qx4dr4a3atsfgmg6957uyg33lfgfnvfyv4h3mgagzw5nzmlqw5mq386hvffyxrqhqve8pjn8ddnh55sy2kqx9'
-    const amount = 1000000;
-    const tx = await lucid
-        .newTx()
-        .pay.ToAddress(receive_address, {lovelace: BigInt(amount)})
-        .complete();
-    const signedTx = await tx.sign.withWallet().complete();
-    const txHash = await signedTx.submit();
-    console.log("TxHash: ", txHash);
+async function main() {
+    const mainApp = await MainApp.getInstance();
+    mainApp.start();
 }
 
 main();

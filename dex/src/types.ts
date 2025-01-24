@@ -10,7 +10,6 @@ export const MIN_TOKEN_POLICY_ID = "e16c2dc8ae937e8d3790c7fd7168d7b994621ba14ca1
 export const MIN_TOKEN_NAME = "MIN";
 
 export const PRIVATE_KEY_PATH_TEST = "/home/dat/Desktop/Minswap-Entry-Task/hello-world/me.sk"
-export const PRIVATE_KEY_PATH = "/home/dat/Desktop/Minswap-Entry-Task/dex/src/resource/me.sk"
 
 export const PLUTUS_PATH = "/home/dat/Desktop/Minswap-Entry-Task/dex/plutus.json"
 export const INIT_LP_TOKEN_AMOUNT = 1000000

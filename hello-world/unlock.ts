@@ -7,7 +7,7 @@ import {
     getUTxOsFromScriptAddressByPublicKeyHash, submitTx
 } from "./common";
 import {Constr, Data, UTxO, Validator, SpendingValidator} from "@lucid-evolution/lucid";
-import {utf8ToHex} from "../src/ultis/ultis";
+import {utf8ToHex} from "../src/common/ultis";
 
 const helloWorldTitle = "hello_world.hello_world.spend";
 
