@@ -16,7 +16,7 @@ import {getAuthValidator, getExchangeValidator, isEqualRational} from "../utils"
 import {AuthenMintingPolicy} from "./authen-minting-policy";
 import {SIMPLE} from "cbor/types/lib/constants";
 
-class Exchange {
+export class Exchange {
     private readonly lucid: LucidEvolution;
     private readonly privateKey: string;
     private readonly exchangeValidator: Validators;

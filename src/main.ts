@@ -53,6 +53,10 @@ export class MainApp {
     public async getAddress() {
         return await this.getLucid().wallet().address();
     }
+
+    public getDataSource() {
+        return this.dataSource;
+    }
 }
 
 async function main() {

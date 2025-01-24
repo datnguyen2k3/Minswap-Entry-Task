@@ -7,11 +7,9 @@ export class TradingPair {
     @PrimaryGeneratedColumn()
     id: number | undefined;
 
-    @ManyToOne(() => Token, token => token.id)
-    @JoinColumn()
-    token1: Token | undefined;
+    @Column({ type: 'varchar' })
+    tokenTradeName1: string | undefined;
 
-    @ManyToOne(() => Token, token => token.id)
-    @JoinColumn()
-    token2: Token | undefined;
+    @Column({ type: 'varchar' })
+    tokenTradeName2: string | undefined;
 }

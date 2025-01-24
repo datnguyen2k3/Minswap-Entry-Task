@@ -6,10 +6,13 @@ export class Token {
     id: number | undefined;
 
     @Column({ type: 'varchar' })
+    contractName: string | undefined;
+
+    @Column({ type: 'varchar' })
     policyId: string | undefined;
 
     @Column({ type: 'varchar' })
-    name: string | undefined;
+    tokenName: string | undefined;
 
     @Column({ type: 'varchar' })
     tradeName: string | undefined;
