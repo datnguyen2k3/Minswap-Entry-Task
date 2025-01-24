@@ -10,7 +10,7 @@ import {
 } from "@lucid-evolution/lucid";
 import fs from "node:fs";
 import * as path from "path";
-import {getLucidOgmiosInstance} from "../src/lucid-instance";
+import {getLucidOgmiosInstance} from "../src/providers/lucid-instance";
 
 export function getCompliedCode(validator_title: string): string {
     const plutusJson = JSON.parse(fs.readFileSync("plutus.json", "utf8"));

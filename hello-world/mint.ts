@@ -1,5 +1,5 @@
 import {getPrivateKey, getValidator, submitTx} from "./common";
-import {getLucidOgmiosInstance} from "../src/lucid-instance";
+import {getLucidOgmiosInstance} from "../src/providers/lucid-instance";
 import {
     applyDoubleCborEncoding,
     applyParamsToScript,

@@ -1,4 +1,4 @@
-import {getLucidOgmiosInstance} from "../src/lucid-instance";
+import {getLucidOgmiosInstance} from "../src/providers/lucid-instance";
 import {
     getPrivateKey,
     getPublicKeyHash,

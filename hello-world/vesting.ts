@@ -9,7 +9,7 @@ import {
     toCBOR,
     toObject
 } from "./common";
-import {getLucidOgmiosInstance} from "../src/lucid-instance";
+import {getLucidOgmiosInstance} from "../src/providers/lucid-instance";
 import {utf8ToHex} from "../src/common/ultis";
 
 const DatumVestingScheme = Data.Object({

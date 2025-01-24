@@ -1,5 +1,5 @@
 import * as Ogmios from "@cardano-ogmios/client";
-import {OgmiosProvider} from "./providers/ogmios-provider";
+import {OgmiosProvider} from "./ogmios-provider";
 import {Blockfrost, Lucid} from "@lucid-evolution/lucid";
 
 export async function getLucidOgmiosInstance() {

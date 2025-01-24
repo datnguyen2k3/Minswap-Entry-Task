@@ -1,7 +1,7 @@
 import {getAuthValidator, getExchangeValidator} from "../utils";
 import {Asset, AUTH_TOKEN_NAME} from "../types";
 import {Constr, Data, fromText, LucidEvolution} from "@lucid-evolution/lucid";
-import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
+import {getLucidOgmiosInstance} from "../../../src/providers/lucid-instance";
 import {getPublicKeyHash, submitTx} from "../../../hello-world/common";
 
 export class AuthenMintingPolicy {

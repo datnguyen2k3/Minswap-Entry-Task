@@ -1,4 +1,4 @@
-import {getLucidOgmiosInstance} from "../src/lucid-instance";
+import {getLucidOgmiosInstance} from "../src/providers/lucid-instance";
 import {Data} from "@lucid-evolution/lucid";
 import {getPrivateKey, getPublicKeyHash, getScriptsAddress, submitTx, toCBOR} from "./common";
 

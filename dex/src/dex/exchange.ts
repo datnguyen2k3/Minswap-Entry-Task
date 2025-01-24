@@ -11,7 +11,7 @@ import {
     PRIVATE_KEY_PATH_TEST,
     Validators
 } from "../types";
-import {getLucidOgmiosInstance} from "../../../src/lucid-instance";
+import {getLucidOgmiosInstance} from "../../../src/providers/lucid-instance";
 import {getAuthValidator, getExchangeValidator, isEqualRational} from "../utils";
 import {AuthenMintingPolicy} from "./authen-minting-policy";
 import {SIMPLE} from "cbor/types/lib/constants";
