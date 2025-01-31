@@ -111,7 +111,7 @@ export async function getPrice(mainApp: MainApp, token1: Token, token2: Token) {
     }
 }
 
-function isValidPolicyId(policyId: string): boolean {
+export function isValidPolicyId(policyId: string): boolean {
     const policyIdRegex = /^[0-9a-fA-F]{56}$/;
     return policyIdRegex.test(policyId);
 }

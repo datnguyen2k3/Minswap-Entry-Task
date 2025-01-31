@@ -490,4 +490,4 @@ async function main() {
     minExchange.swapTradeTokenToOtherToken(BigInt(50000), trashAsset).then(() => console.log("Trade token swapped to other token successfully for min token"));
 }
 
-main();
+// main();

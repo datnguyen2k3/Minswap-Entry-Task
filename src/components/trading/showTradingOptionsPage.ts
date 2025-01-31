@@ -1,5 +1,6 @@
 import {MainApp} from "../../main";
 import {showInvalidAnswer} from "../showInvalidAnswer";
+import {showAddPairPage} from "./showAddPairPage";
 
 const ENTER_TRADING_PAIR = '1';
 const ADD_TRADING_PAIR = '2';
@@ -21,7 +22,7 @@ export function showTradingOptionsPage(mainApp: MainApp) {
                 console.log('Enter trading pair');
                 break;
             case ADD_TRADING_PAIR:
-                console.log('Add trading pair');
+                showAddPairPage(mainApp);
                 break;
             case REMOVE_TRADING_PAIR:
                 console.log('Remove trading pair');
