@@ -61,12 +61,12 @@ export function getPrivateKey(): string {
     return fs.readFileSync("me.sk", "utf8");
 }
 
-export function getPrivateKeyFrom(path_str: string): string {
+export function getKeyFrom(path_str: string): string {
     const absolutePath = path.resolve(path_str);
     return fs.readFileSync(absolutePath, "utf8");
 }
 
-export function savePrivateKey(privateKey: string, path_str: string): void {
+export function saveKeyFrom(privateKey: string, path_str: string): void {
     const absolutePath = path.resolve(path_str);
     fs.writeFileSync(absolutePath, privateKey);
 }

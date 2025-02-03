@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import {fromText} from "@lucid-evolution/lucid";
+import {Asset} from "../../dex/src/types";
 
 @Entity()
 export class Token {
@@ -17,5 +18,16 @@ export class Token {
 
     public getContractName(): string {
         return this.policyId + '.' + fromText(<string>this.tokenName);
+    }
+
+    public getAsset(): Asset {
+        if (!this.policyId || !this.tokenName) {
+            throw new Error('Token is not initialized');
+        }
+
+        return {
+            policyId: this.policyId,
+            tokenName: this.tokenName
+        }
     }
 }

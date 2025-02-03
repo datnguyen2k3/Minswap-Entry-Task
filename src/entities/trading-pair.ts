@@ -12,4 +12,8 @@ export class TradingPair {
 
     @Column({ type: 'varchar' })
     tokenTradeName2: string | undefined;
+
+    public getPairName(): string {
+        return this.tokenTradeName1 + '-' + this.tokenTradeName2;
+    }
 }

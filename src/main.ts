@@ -1,8 +1,8 @@
 import * as readline from 'readline';
 import {showMainMenuPage} from "./components/showMainMenuPage";
 import {LucidEvolution} from "@lucid-evolution/lucid";
-import {getPrivateKeyFrom} from "../hello-world/common";
-import {PRIVATE_KEY_PATH} from "./common/types";
+import {getKeyFrom} from "../hello-world/common";
+import {ADMIN_PUBLIC_KEY_HASH_PATH, PRIVATE_KEY_PATH} from "./common/types";
 import {getAssets} from "./common/ultis";
 import {getLucidOgmiosInstance} from "./providers/lucid-instance";
 import "reflect-metadata"
@@ -42,7 +42,7 @@ export class MainApp {
     }
 
     public getPrivateKey() {
-        return getPrivateKeyFrom(PRIVATE_KEY_PATH);
+        return getKeyFrom(PRIVATE_KEY_PATH);
     }
 
     public getLucid() {
@@ -52,6 +52,10 @@ export class MainApp {
 
     public async getAddress() {
         return await this.getLucid().wallet().address();
+    }
+
+    public getAdminPublicKeyHash() {
+        return getKeyFrom(ADMIN_PUBLIC_KEY_HASH_PATH);
     }
 
     public getDataSource() {

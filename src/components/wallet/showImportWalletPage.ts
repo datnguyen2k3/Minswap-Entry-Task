@@ -1,6 +1,6 @@
 import {MainApp} from "../../main";
 import {generatePrivateKey} from "@lucid-evolution/lucid";
-import {getAddress, savePrivateKey} from "../../../hello-world/common";
+import {getAddress, saveKeyFrom} from "../../../hello-world/common";
 import {showWalletOptionsPage} from "./showWalletOptionsPage";
 import {validatePrivateKey} from "../../common/ultis";
 import {PRIVATE_KEY_PATH} from "../../common/types";
@@ -16,7 +16,7 @@ export function showImportWalletPage(mainApp: MainApp) {
             console.log('Invalid private key, please try again');
             showImportWalletPage(mainApp);
         } else {
-            savePrivateKey(privateKey, PRIVATE_KEY_PATH);
+            saveKeyFrom(privateKey, PRIVATE_KEY_PATH);
             console.log('Imported wallet successfully');
             console.log();
             console.log('Press any key to go back');

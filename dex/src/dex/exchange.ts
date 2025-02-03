@@ -1,5 +1,5 @@
 import {Constr, Data, fromText, LucidEvolution, Redeemer, UTxO} from "@lucid-evolution/lucid";
-import {getPrivateKeyFrom, getPublicKeyHash, submitTx, toObject} from "../../../hello-world/common";
+import {getKeyFrom, getPublicKeyHash, submitTx, toObject} from "../../../hello-world/common";
 import {
     Asset,
     AUTH_TOKEN_NAME,
@@ -443,7 +443,7 @@ export class Exchange {
 }
 
 async function main() {
-    const privateKey = getPrivateKeyFrom(PRIVATE_KEY_PATH_TEST);
+    const privateKey = getKeyFrom(PRIVATE_KEY_PATH_TEST);
     const lucid = await getLucidOgmiosInstance();
 
     const minAsset: Asset = {

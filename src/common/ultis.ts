@@ -1,12 +1,10 @@
 import {CML, LucidEvolution, UTxO} from "@lucid-evolution/lucid";
-import {getTradingPairs} from "../repository/trading-pair-repository";
-import {Token} from "../entities/token";
+
 import {MainApp} from "../main";
-import {Exchange} from "../../dex/src/dex/exchange";
-import {ADMIN_PUBLIC_KEY_HASH} from "./types";
-import {DataSource} from "typeorm";
-import {TradingPair} from "../entities/trading-pair";
+
 import {findTokenBySymbol} from "../repository/token-repository";
+import {Exchange} from "../../dex/src/dex/exchange";
+import {ADA_TO_LOVELACE} from "./types";
 
 export function parseFraction(fraction: string): number {
     const [numerator, denominator] = fraction.split('/').map(Number);
@@ -53,62 +51,33 @@ export async function getAssets(address: string, lucid: LucidEvolution) {
     return assets;
 }
 
-export async function getTradingPairsAndPrice(mainApp: MainApp, page: number, perPage: number) {
-    const tradingPairs = await getTradingPairs(mainApp.getDataSource(), page, perPage);
-    const pairAndPrice = new Map<string, number>();
-
-    for (const tradingPair of tradingPairs) {
-        const tokenTradeName1 = tradingPair.tokenTradeName1;
-        const tokenTradeName2 = tradingPair.tokenTradeName2;
-
-        if (!tokenTradeName1 || !tokenTradeName2) {
-            continue
+export async function getPrice(mainApp: MainApp, tradeToken1: string, tradeToken2: string) {
+    if (tradeToken1 === 'ADA') {
+        const token2 = await findTokenBySymbol(tradeToken2, mainApp.getDataSource());
+        if (!token2) {
+            throw new Error('Token not found');
         }
-
-        const token1 = await findTokenBySymbol(tokenTradeName1, mainApp.getDataSource());
-        const token2 = await findTokenBySymbol(tokenTradeName2, mainApp.getDataSource());
-
-        if (!token1 || !token2) {
-            continue
+        const lpUTxO2 = await Exchange.getLiquidityPoolUTxO(mainApp.getLucid(), mainApp.getAdminPublicKeyHash(), token2.getAsset());
+        return Number(Exchange.getReceivedLovelaceBySwapTradeToken(lpUTxO2, BigInt(10000), token2.getContractName())) / 10000;
+    } else if (tradeToken2 === 'ADA') {
+        const token1 = await findTokenBySymbol(tradeToken1, mainApp.getDataSource());
+        if (!token1) {
+            throw new Error('Token not found');
         }
-
-        pairAndPrice.set(tokenTradeName1 + "-" + tokenTradeName2, await getPrice(mainApp, token1, token2));
-    }
-
-    return pairAndPrice;
-}
-
-export async function getPrice(mainApp: MainApp, token1: Token, token2: Token) {
-    if (!token1?.policyId || !token1?.tokenName || !token1?.getContractName()) {
-        throw new Error('Token not found');
-    }
-
-    const lpUTxO1 = await Exchange.getLiquidityPoolUTxO(
-        mainApp.getLucid(),
-        ADMIN_PUBLIC_KEY_HASH,
-        {
-            policyId: token1.policyId,
-            tokenName: token1.tokenName
-        }
-    );
-
-    if (token2.tradeName == "ADA") {
-        return Number(lpUTxO1.assets[token1.getContractName()]) / Number(lpUTxO1.assets['lovelace']);
+        const lpUTxO1 = await Exchange.getLiquidityPoolUTxO(mainApp.getLucid(), mainApp.getAdminPublicKeyHash(), token1.getAsset());
+        return Number(Exchange.getReceivedLovelaceBySwapTradeToken(lpUTxO1, BigInt(10000), token1.getContractName())) / (10000 * ADA_TO_LOVELACE);
     } else {
-        if (!token2?.policyId || !token2?.tokenName || !token2?.getContractName()) {
+        const token1 = await findTokenBySymbol(tradeToken1, mainApp.getDataSource());
+        const token2 = await findTokenBySymbol(tradeToken2, mainApp.getDataSource());
+        if (!token1 || !token2) {
             throw new Error('Token not found');
         }
 
-        const lpUTxO2 = await Exchange.getLiquidityPoolUTxO(
-            mainApp.getLucid(),
-            ADMIN_PUBLIC_KEY_HASH,
-            {
-                policyId: token2.policyId,
-                tokenName: token2.tokenName
-            }
-        );
+        const lpUTxO1 = await Exchange.getLiquidityPoolUTxO(mainApp.getLucid(), mainApp.getAdminPublicKeyHash(), token1.getAsset());
+        const lpUTxO2 = await Exchange.getLiquidityPoolUTxO(mainApp.getLucid(), mainApp.getAdminPublicKeyHash(), token2.getAsset());
 
-        return Number(lpUTxO1.assets[token1.getContractName()] * lpUTxO2.assets['lovelace'] / (lpUTxO1.assets['lovelace'] * lpUTxO2.assets[token2.getContractName()]));
+        const bridgeLovelace = Exchange.getReceivedLovelaceBySwapTradeToken(lpUTxO1, BigInt(10000), token1.getContractName());
+        return Number(Exchange.getReceivedTradeTokenBySwapAda(lpUTxO2, BigInt(bridgeLovelace), token2.getContractName())) / 10000;
     }
 }
 

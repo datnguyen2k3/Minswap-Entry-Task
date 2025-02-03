@@ -3,6 +3,7 @@ import {showInvalidAnswer} from "../showInvalidAnswer";
 import {showAddPairPage} from "./showAddPairPage";
 import {showAddTokenPage} from "./showAddTokenPage";
 import {showMainMenuPage} from "../showMainMenuPage";
+import {showEnterPairPage} from "./exchange/showEnterPairPage";
 
 const ENTER_TRADING_PAIR = '1';
 const ADD_TRADING_PAIR = '2';
@@ -26,7 +27,7 @@ export function showTradingOptionsPage(mainApp: MainApp) {
     mainApp.getReadline().question('Enter your choice:', (answer: string) => {
         switch (answer) {
             case ENTER_TRADING_PAIR:
-                console.log('Enter trading pair');
+                showEnterPairPage(mainApp);
                 break;
             case ADD_TRADING_PAIR:
                 showAddPairPage(mainApp);
