@@ -1,12 +1,14 @@
 import { DataSource } from 'typeorm';
 import "reflect-metadata";
+import {PREFIX_PATH} from "./common/types";
 
 export const AppDataSource = new DataSource({
   type: 'sqlite',
-  database: 'resources/db/db.sqlite',
+  database: PREFIX_PATH + 'resources/db/db.sqlite',
   synchronize: true,
   logging: false,
-  entities: ['entities/**/*.ts',],
-  migrations: ['resources/db/migrations/**/*.ts'],
+  entities: [PREFIX_PATH + 'entities/**/*.ts',],
+  migrations: [PREFIX_PATH + 'resources/db/migrations/**/*.ts'],
   subscribers: [],
 });
+
