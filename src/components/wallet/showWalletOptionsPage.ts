@@ -4,20 +4,23 @@ import {showWalletInformationPage} from "./showWalletInformationPage";
 import {showMainMenuPage} from "../showMainMenuPage";
 import {showCreateNewWalletPage} from "./showCreateNewWalletPage";
 import {showImportWalletPage} from "./showImportWalletPage";
-
-const SET_UP_ACCOUNT_QUETIONS =
-`
-Wallet options:
-1 - Wallet Information
-2 - Create a new wallet
-3 - Import an existing wallet
-4 - Go back
-Enter your choice:`;
+import {showWithdrawPage} from "./showWithdrawPage";
 
 const WALLET_INFORMATION = '1';
 const CREATE_NEW_WALLET = '2';
 const IMPORT_EXISTING_WALLET = '3';
-const GO_BACK = '4';
+const WITHDRAW = '4';
+const GO_BACK = '5';
+
+const SET_UP_ACCOUNT_QUETIONS =
+`
+Wallet options:
+${WALLET_INFORMATION} - Wallet Information
+${CREATE_NEW_WALLET} - Create a new wallet
+${IMPORT_EXISTING_WALLET} - Import an existing wallet
+${WITHDRAW} - Withdraw
+${GO_BACK} - Go back
+Enter your choice:`;
 
 export function showWalletOptionsPage(mainApp: MainApp) {
     mainApp.getReadline().question(SET_UP_ACCOUNT_QUETIONS, async (answer: string) => {
@@ -30,6 +33,9 @@ export function showWalletOptionsPage(mainApp: MainApp) {
                 break;
             case IMPORT_EXISTING_WALLET:
                 showImportWalletPage(mainApp);
+                break;
+            case WITHDRAW:
+                showWithdrawPage(mainApp);
                 break;
             case GO_BACK:
                 showMainMenuPage(mainApp);

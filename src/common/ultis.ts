@@ -188,3 +188,12 @@ export function isValidPolicyId(policyId: string): boolean {
     const policyIdRegex = /^[0-9a-fA-F]{56}$/;
     return policyIdRegex.test(policyId);
 }
+
+export function isValidAddress(address: string): boolean {
+    try {
+        CML.Address.from_bech32(address);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}

@@ -54,7 +54,11 @@ This option allows you to interact with your wallet
 - This option allows you to import an existing wallet:
   - Enter your private key
 
-#### 1.4. Go back
+#### 1.4 Withdraw
+- This option allows you to withdraw money from your wallet
+- You need to enter the token symbol, amount and the receiver address to withdraw.
+
+#### 1.5. Go back
 - This option allows you to go back to the main menu
 
 ### 2. Market
