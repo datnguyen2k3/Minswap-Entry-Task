@@ -1,67 +1,57 @@
 import {MainApp} from "../../main";
 import {showTradingOptionsPage} from "./showTradingOptionsPage";
-import {isValidPolicyId} from "../../common/ultis";
 import {showInvalidAnswer} from "../showInvalidAnswer";
+import {findTokenBySymbol} from "../../repository/token-repository";
+import {saveTradingPair} from "../../repository/trading-pair-repository";
 
 export function showAddPairPage(mainApp: MainApp) {
+    console.log();
     console.log('Add trading pair:');
-    let policyId1 = '';
-    let policyId2 = '';
-    let tokenName1 = '';
-    let tokenName2 = '';
-
-    enterTokenPolicy1(mainApp);
+    console.log('Press E to go back');
+    enterTradeToken1(mainApp);
 }
 
-function enterTokenPolicy1(mainApp: MainApp): void {
-    mainApp.getReadline().question(`Enter the policy id of token 1:`, (policyId: string) => {
-        if (policyId === 'E') {
+export function enterTradeToken1(mainApp: MainApp) {
+    mainApp.getReadline().question(`Enter token symbol 1:`, async (tradeToken1) => {
+        if (tradeToken1 === 'E') {
             showTradingOptionsPage(mainApp);
-        } else if (!isValidPolicyId(policyId)) {
+        } else if (tradeToken1 === '') {
             showInvalidAnswer();
-            enterTokenPolicy1(mainApp);
+            enterTradeToken1(mainApp);
         } else {
-            enterTokenName1(policyId, mainApp);
+            const token1 = await findTokenBySymbol(tradeToken1, mainApp.getDataSource());
+            if (!token1) {
+                console.log('Token not found, please try again');
+                enterTradeToken1(mainApp);
+            }
+            enterTradeToken2(tradeToken1, mainApp);
         }
     });
 }
 
-function enterTokenName1(resultPolicyId1: string, mainApp: MainApp) {
-    mainApp.getReadline().question(`Enter the token name of token 1:`, (tokenName: string) => {
-        if (tokenName === 'E') {
+function enterTradeToken2(resultTradeToken1: string, mainApp: MainApp) {
+    mainApp.getReadline().question(`Enter token symbol 2:`, async (tradeToken2) => {
+        if (tradeToken2 === 'E') {
             showTradingOptionsPage(mainApp);
-        } else if (tokenName === '') {
+        } else if (tradeToken2 === '') {
             showInvalidAnswer();
-            enterTokenName1(resultPolicyId1, mainApp);
+            enterTradeToken2(resultTradeToken1, mainApp);
+        } else if (tradeToken2 === resultTradeToken1) {
+            console.log('Token 2 must be different from token 1');
+            enterTradeToken2(resultTradeToken1, mainApp);
         } else {
-            enterTokenPolicy2(resultPolicyId1, tokenName, mainApp);
-        }
-    })
-}
+            const token2 = await findTokenBySymbol(tradeToken2, mainApp.getDataSource());
+            if (!token2) {
+                console.log('Token not found, please try again');
+                enterTradeToken2(resultTradeToken1, mainApp);
+            }
+            await saveTradingPair(resultTradeToken1, tradeToken2, mainApp.getDataSource());
+            console.log('Trading pair added successfully');
 
-function enterTokenPolicy2(resultPolicyId1: string, resultTokenName1: string, mainApp: MainApp): void {
-    mainApp.getReadline().question(`Enter the policy id of token 2:`, (policyId: string) => {
-        if (policyId === 'E') {
-            showTradingOptionsPage(mainApp);
-        } else if (!isValidPolicyId(policyId)) {
-            showInvalidAnswer();
-            enterTokenPolicy2(resultPolicyId1, resultTokenName1, mainApp);
-        } else {
-            enterTokenName2(resultPolicyId1, resultTokenName1, policyId, mainApp);
+            console.log('Press any key to go back');
+            mainApp.getReadline().once('line', () => {
+                showTradingOptionsPage(mainApp);
+            });
         }
     });
 }
-
-function enterTokenName2(resultPolicyId1: string, resultTokenName1: string, resultPolicyId2: string, mainApp: MainApp) {
-    mainApp.getReadline().question(`Enter the token name of token 2:`, (tokenName: string) => {
-        if (tokenName === 'E') {
-            showTradingOptionsPage(mainApp);
-        } else if (tokenName === '') {
-            showInvalidAnswer();
-            enterTokenName2(resultPolicyId1, resultTokenName1, resultPolicyId2, mainApp);
-        } else {
-            console.log(resultPolicyId1, resultTokenName1, resultPolicyId2, resultPolicyId2);
-        }
-    })
-}
-

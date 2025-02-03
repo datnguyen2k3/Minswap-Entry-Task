@@ -1,11 +1,12 @@
 import {CML, LucidEvolution, UTxO} from "@lucid-evolution/lucid";
-import {DataSource} from "typeorm";
 import {getTradingPairs} from "../repository/trading-pair-repository";
 import {Token} from "../entities/token";
-import {findTokenByTradeName} from "../repository/token-repository";
 import {MainApp} from "../main";
 import {Exchange} from "../../dex/src/dex/exchange";
 import {ADMIN_PUBLIC_KEY_HASH} from "./types";
+import {DataSource} from "typeorm";
+import {TradingPair} from "../entities/trading-pair";
+import {findTokenBySymbol} from "../repository/token-repository";
 
 export function parseFraction(fraction: string): number {
     const [numerator, denominator] = fraction.split('/').map(Number);
@@ -64,8 +65,8 @@ export async function getTradingPairsAndPrice(mainApp: MainApp, page: number, pe
             continue
         }
 
-        const token1 = await findTokenByTradeName(mainApp.getDataSource(), tokenTradeName1);
-        const token2 = await findTokenByTradeName(mainApp.getDataSource(), tokenTradeName2);
+        const token1 = await findTokenBySymbol(tokenTradeName1, mainApp.getDataSource());
+        const token2 = await findTokenBySymbol(tokenTradeName2, mainApp.getDataSource());
 
         if (!token1 || !token2) {
             continue
@@ -78,7 +79,7 @@ export async function getTradingPairsAndPrice(mainApp: MainApp, page: number, pe
 }
 
 export async function getPrice(mainApp: MainApp, token1: Token, token2: Token) {
-    if (!token1?.policyId || !token1?.tokenName || !token1?.contractName) {
+    if (!token1?.policyId || !token1?.tokenName || !token1?.getContractName()) {
         throw new Error('Token not found');
     }
 
@@ -92,9 +93,9 @@ export async function getPrice(mainApp: MainApp, token1: Token, token2: Token) {
     );
 
     if (token2.tradeName == "ADA") {
-        return Number(lpUTxO1.assets[token1.contractName]) / Number(lpUTxO1.assets['lovelace']);
+        return Number(lpUTxO1.assets[token1.getContractName()]) / Number(lpUTxO1.assets['lovelace']);
     } else {
-        if (!token2?.policyId || !token2?.tokenName || !token2?.contractName) {
+        if (!token2?.policyId || !token2?.tokenName || !token2?.getContractName()) {
             throw new Error('Token not found');
         }
 
@@ -107,7 +108,7 @@ export async function getPrice(mainApp: MainApp, token1: Token, token2: Token) {
             }
         );
 
-        return Number(lpUTxO1.assets[token1.contractName] * lpUTxO2.assets['lovelace'] / (lpUTxO1.assets['lovelace'] * lpUTxO2.assets[token2.contractName]));
+        return Number(lpUTxO1.assets[token1.getContractName()] * lpUTxO2.assets['lovelace'] / (lpUTxO1.assets['lovelace'] * lpUTxO2.assets[token2.getContractName()]));
     }
 }
 
