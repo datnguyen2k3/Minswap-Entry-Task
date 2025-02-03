@@ -3,6 +3,7 @@ import {MainApp} from "../../../main";
 import {getPrice} from "../../../common/ultis";
 import {showTradingOptionsPage} from "../showTradingOptionsPage";
 import {showBuyPage} from "./showBuyPage";
+import {showSellPage} from "./showSellPage";
 
 export async function showPairOption(pair: TradingPair, mainApp: MainApp) {
     console.log()
@@ -22,10 +23,10 @@ export async function showPairOption(pair: TradingPair, mainApp: MainApp) {
     mainApp.getReadline().question(`Enter your option:`, async (option) => {
         switch (option) {
             case '1':
-                showBuyPage(mainApp, pair);
+                await showBuyPage(mainApp, pair);
                 break;
             case '2':
-                console.log('Sell');
+                await showSellPage(mainApp, pair);
                 break;
             case '3':
                 showTradingOptionsPage(mainApp);
