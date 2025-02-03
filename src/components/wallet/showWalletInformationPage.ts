@@ -13,7 +13,7 @@ export async function showWalletInformationPage(mainApp: MainApp) {
 
     const assets = await getAssets(
         await mainApp.getAddress(),
-        mainApp.getLucid()
+        mainApp
     )
 
     for (const [assetName, value] of assets) {

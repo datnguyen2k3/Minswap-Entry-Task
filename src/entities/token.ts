@@ -17,7 +17,7 @@ export class Token {
     tradeName: string | undefined;
 
     public getContractName(): string {
-        return this.policyId + '.' + fromText(<string>this.tokenName);
+        return this.policyId + fromText(<string>this.tokenName);
     }
 
     public getAsset(): Asset {
