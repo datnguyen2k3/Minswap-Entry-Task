@@ -110,7 +110,7 @@ When you choose this option, you will see a price of many tokens with the follow
 
 #### 2.8. Go back
 
-## 3. Liquidity (under development)
+### 3. Liquidity (under development)
 
-## 4. Exit
+### 4. Exit
 - This option allows you to exit the app
