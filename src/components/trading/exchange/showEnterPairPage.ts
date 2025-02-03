@@ -3,7 +3,7 @@ import {showMainMenuPage} from "../../showMainMenuPage";
 import {showTradingOptionsPage} from "../showTradingOptionsPage";
 import {showInvalidAnswer} from "../../showInvalidAnswer";
 import {findPairByTokenSymbol} from "../../../repository/trading-pair-repository";
-import {showPairOption} from "./showPairOption";
+import {showPairOptionPage} from "./showPairOptionPage";
 
 export function showEnterPairPage(mainApp: MainApp) {
     console.log();
@@ -26,7 +26,7 @@ export function showEnterPairPage(mainApp: MainApp) {
                 console.log('Trading pair not found, please try again');
                 showEnterPairPage(mainApp);
             } else {
-                await showPairOption(pair, mainApp);
+                await showPairOptionPage(pair, mainApp);
             }
         }
     });

@@ -29,3 +29,19 @@ export async function findTokenByPolicyIdAndTokenName(policyId: string, tokenNam
         }
     })
 }
+
+export async function getTokens(datasource: DataSource, page: number, perPage: number) {
+    const tokenRepository = datasource.getRepository(Token);
+
+    return tokenRepository.find({
+        skip: page * perPage,
+        take: perPage
+    })
+}
+
+export async function getTokenTotalPage(datasource: DataSource, perPage: number) {
+    const tokenRepository = datasource.getRepository(Token);
+
+    const total = await tokenRepository.count();
+    return Math.ceil(total / perPage);
+}

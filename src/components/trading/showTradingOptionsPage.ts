@@ -4,18 +4,37 @@ import {showAddPairPage} from "./showAddPairPage";
 import {showAddTokenPage} from "./showAddTokenPage";
 import {showMainMenuPage} from "../showMainMenuPage";
 import {showEnterPairPage} from "./exchange/showEnterPairPage";
+import {getTokens, getTokenTotalPage} from "../../repository/token-repository";
+import {getPrice} from "../../common/ultis";
 
 const ENTER_TRADING_PAIR = '1';
 const ADD_TRADING_PAIR = '2';
 const REMOVE_TRADING_PAIR = '3';
 const ADD_TOKEN = '4';
 const REMOVE_TOKEN = '5';
-const BACK = '6';
+const NEXT_PAGE = '6';
+const PREVIOUS_PAGE = '7';
+const BACK = '8';
 
-export function showTradingOptionsPage(mainApp: MainApp) {
+const PER_PAGE = 10;
+
+export async function showTradingOptionsPage(mainApp: MainApp, page: number = 0) {
     console.log();
     console.log('Market today:');
+    const tokens = await getTokens(mainApp.getDataSource(), 0, 10);
+    for (let i = 0; i < tokens.length; i++) {
+        const orderIndex = i + 1 + page * PER_PAGE;
+        const symbol = tokens[i].tradeName;
+        if (!symbol) {
+            throw new Error('Token symbol not found');
+        }
 
+        const price = await getPrice(mainApp, symbol, 'ADA');
+        console.log(`${orderIndex}. ${symbol}: ${price} ADA`);
+    }
+    const totalPage = await getTokenTotalPage(mainApp.getDataSource(), PER_PAGE);
+    console.log(`Page ${page + 1}/${totalPage}`);
+    console.log();
 
     console.log('Next option:');
     console.log('1 - Enter trading pair');
@@ -23,7 +42,9 @@ export function showTradingOptionsPage(mainApp: MainApp) {
     console.log('3 - Remove trading pair');
     console.log('4 - Add token');
     console.log('5 - Remove token');
-    console.log('6 - Back');
+    console.log('6 - Go to next page');
+    console.log('7 - Go to previous page');
+    console.log('8 - Back');
     mainApp.getReadline().question('Enter your choice:', (answer: string) => {
         switch (answer) {
             case ENTER_TRADING_PAIR:
@@ -40,6 +61,12 @@ export function showTradingOptionsPage(mainApp: MainApp) {
                 break;
             case REMOVE_TOKEN:
                 console.log('Remove token');
+                break;
+            case NEXT_PAGE:
+                showTradingOptionsPage(mainApp, page + 1);
+                break;
+            case PREVIOUS_PAGE:
+                showTradingOptionsPage(mainApp, page - 1);
                 break;
             case BACK:
                 showMainMenuPage(mainApp);

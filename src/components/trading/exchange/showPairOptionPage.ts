@@ -5,7 +5,7 @@ import {showTradingOptionsPage} from "../showTradingOptionsPage";
 import {showBuyPage} from "./showBuyPage";
 import {showSellPage} from "./showSellPage";
 
-export async function showPairOption(pair: TradingPair, mainApp: MainApp) {
+export async function showPairOptionPage(pair: TradingPair, mainApp: MainApp) {
     console.log()
     console.log(`Pair: ${pair.tokenTradeName1}-${pair.tokenTradeName2}`);
     if (!pair.tokenTradeName1 || !pair.tokenTradeName2) {
@@ -33,7 +33,7 @@ export async function showPairOption(pair: TradingPair, mainApp: MainApp) {
                 break;
             default:
                 console.log('Invalid option');
-                await showPairOption(pair, mainApp);
+                await showPairOptionPage(pair, mainApp);
                 break;
         }
     });

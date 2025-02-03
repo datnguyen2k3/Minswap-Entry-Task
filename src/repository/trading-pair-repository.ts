@@ -11,10 +11,11 @@ export function getTradingPairs(datasource: DataSource, page: number, perPage: n
     })
 }
 
-export function getTradingPairTotal(datasource: DataSource) {
+export async function getTradingPairTotalPage(datasource: DataSource, perPage: number) {
     const tradingPairRepository = datasource.getRepository(TradingPair)
 
-    return tradingPairRepository.count();
+    const total = await tradingPairRepository.count();
+    return Math.ceil(total / perPage);
 }
 
 export async function saveTradingPair(tokenTradeName1: string, tokenTradeName2: string, datasource: DataSource) {
@@ -42,7 +43,6 @@ export async function addPair(tokenTradeName1: string, tokenTradeName2: string, 
     await saveTradingPair(tokenTradeName1, tokenTradeName2, datasource);
     await saveTradingPair(tokenTradeName2, tokenTradeName1, datasource);
 }
-
 
 export async function findPairByTokenSymbol(tokenTradeName1: string, tokenTradeName2: string, datasource: DataSource) {
     const tradingPairRepository = datasource.getRepository(TradingPair);

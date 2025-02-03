@@ -8,18 +8,18 @@ export const MAIN_MENU =
 `
 Main menu
 1 - Wallet
-2 - Trading
+2 - Market
 3 - Liquidity
 4 - Exit
 Enter your choice:`;
 
 export const WALLET_OPTIONS = '1'
-export const TRADING_OPTIONS = '2'
+export const MARKET_OPTIONS = '2'
 export const LIQUIDITY_OPTIONS = '3'
 export const EXIT_OPTIONS = '4'
 
 
-const OPTIONS_NEED_PRIVATE_KEY = [TRADING_OPTIONS, LIQUIDITY_OPTIONS];
+const OPTIONS_NEED_PRIVATE_KEY = [MARKET_OPTIONS, LIQUIDITY_OPTIONS];
 
 export function showMainMenuPage(mainApp: MainApp) {
     mainApp.getReadline().question(MAIN_MENU, (answer: string) => {
@@ -32,7 +32,7 @@ export function showMainMenuPage(mainApp: MainApp) {
             case WALLET_OPTIONS:
                 showWalletOptionsPage(mainApp);
                 break;
-            case TRADING_OPTIONS:
+            case MARKET_OPTIONS:
                 showTradingOptionsPage(mainApp);
                 break;
             case LIQUIDITY_OPTIONS:

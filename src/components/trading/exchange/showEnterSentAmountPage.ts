@@ -1,7 +1,7 @@
 import {MainApp} from "../../../main";
 import {TradingPair} from "../../../entities/trading-pair";
 import {createSwapTx, getAssets, getFee, getReceivedTokenFrom} from "../../../common/ultis";
-import {showPairOption} from "./showPairOption";
+import {showPairOptionPage} from "./showPairOptionPage";
 import {TxSignBuilder} from "@lucid-evolution/lucid";
 import {submitTx} from "../../../../hello-world/common";
 
@@ -22,7 +22,7 @@ export async function enterSentAmount(mainApp: MainApp, pair: TradingPair) {
 
     mainApp.getReadline().question(`Enter amount of ${sentToken}:`, async (amount) => {
         if (amount === 'E') {
-            await showPairOption(pair, mainApp);
+            await showPairOptionPage(pair, mainApp);
         } else if (isNaN(parseFloat(amount))) {
             console.log('Invalid amount');
             await enterSentAmount(mainApp, pair);
@@ -60,7 +60,7 @@ export function confirmBuy(mainApp: MainApp, pair: TradingPair, tx: TxSignBuilde
             console.log('Press any key to continue');
 
             mainApp.getReadline().question(``, async () => {
-                await showPairOption(pair, mainApp);
+                await showPairOptionPage(pair, mainApp);
             });
         } else if (confirm === 'E') {
             await enterSentAmount(mainApp, pair);
