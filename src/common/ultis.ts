@@ -1,12 +1,14 @@
-import {CML, fromText, LucidEvolution, toText, TxSignBuilder, UTxO} from "@lucid-evolution/lucid";
-
+import {CML, toText, TxSignBuilder, UTxO} from "@lucid-evolution/lucid";
 import {MainApp} from "../main";
+import sha256 from 'crypto-js/sha256';
+import hmacSHA512 from 'crypto-js/hmac-sha512';
+import Base64 from 'crypto-js/enc-base64';
 
 import {findTokenByPolicyIdAndTokenName, findTokenBySymbol} from "../repository/token-repository";
 import {Exchange} from "../../dex/src/dex/exchange";
-import {ADA_TO_LOVELACE} from "./types";
-import {TradingPair} from "../entities/trading-pair";
+import {ADA_TO_LOVELACE, PASSWORD_PATH} from "./types";
 import {findPairByTokenSymbol} from "../repository/trading-pair-repository";
+import {saveKeyFrom} from "../../hello-world/common";
 
 export function parseFraction(fraction: string): number {
     const [numerator, denominator] = fraction.split('/').map(Number);
@@ -196,4 +198,14 @@ export function isValidAddress(address: string): boolean {
     } catch (e) {
         return false;
     }
+}
+
+export function createEncryptedPassword(password: string, privateKey: string): string {
+    const hashDigest = sha256(password);
+    return Base64.stringify(hmacSHA512(hashDigest, privateKey));
+}
+
+export function savePassword(password: string, privateKey: string) {
+    const encryptedPassword = createEncryptedPassword(password, privateKey);
+    saveKeyFrom(encryptedPassword, PASSWORD_PATH);
 }

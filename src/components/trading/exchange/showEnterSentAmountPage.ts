@@ -4,6 +4,7 @@ import {createSwapTx, getAssets, getFee, getReceivedTokenFrom} from "../../../co
 import {showPairOptionPage} from "./showPairOptionPage";
 import {TxSignBuilder} from "@lucid-evolution/lucid";
 import {submitTx} from "../../../../hello-world/common";
+import {showSubmitTxWithPasswordPage} from "../../showSubmitTxWithPasswordPage";
 
 export async function enterSentAmount(mainApp: MainApp, pair: TradingPair) {
     console.log();
@@ -56,12 +57,7 @@ export function confirmBuy(mainApp: MainApp, pair: TradingPair, tx: TxSignBuilde
     console.log('Press Y to confirm, E to cancel');
     mainApp.getReadline().question(`Confirm?`, async (confirm) => {
         if (confirm === 'Y') {
-            await submitTx(tx, mainApp.getLucid());
-            console.log('Press any key to continue');
-
-            mainApp.getReadline().question(``, async () => {
-                await showPairOptionPage(pair, mainApp);
-            });
+            showSubmitTxWithPasswordPage(mainApp, tx, showPairOptionPage, pair, mainApp);
         } else if (confirm === 'E') {
             await enterSentAmount(mainApp, pair);
         } else {

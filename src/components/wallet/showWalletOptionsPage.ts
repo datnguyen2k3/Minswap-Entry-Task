@@ -5,12 +5,14 @@ import {showMainMenuPage} from "../showMainMenuPage";
 import {showCreateNewWalletPage} from "./showCreateNewWalletPage";
 import {showImportWalletPage} from "./showImportWalletPage";
 import {showWithdrawPage} from "./showWithdrawPage";
+import {showPasswordPage} from "./showPasswordPage";
 
 const WALLET_INFORMATION = '1';
 const CREATE_NEW_WALLET = '2';
 const IMPORT_EXISTING_WALLET = '3';
 const WITHDRAW = '4';
-const GO_BACK = '5';
+const PASSWORD = '5';
+const GO_BACK = '6';
 
 const SET_UP_ACCOUNT_QUETIONS =
 `
@@ -19,6 +21,7 @@ ${WALLET_INFORMATION} - Wallet Information
 ${CREATE_NEW_WALLET} - Create a new wallet
 ${IMPORT_EXISTING_WALLET} - Import an existing wallet
 ${WITHDRAW} - Withdraw
+${PASSWORD} - Change Password
 ${GO_BACK} - Go back
 Enter your choice:`;
 
@@ -36,6 +39,9 @@ export function showWalletOptionsPage(mainApp: MainApp) {
                 break;
             case WITHDRAW:
                 showWithdrawPage(mainApp);
+                break;
+            case PASSWORD:
+                showPasswordPage(mainApp);
                 break;
             case GO_BACK:
                 showMainMenuPage(mainApp);

@@ -1,6 +1,7 @@
 # Simple wallet
 
-- This is a simple wallet that allows you to create a wallet, deposit money, withdraw money, and check your balance.
+- This is a simple wallet that allows you to create a wallet, deposit money, withdraw money, check your balance, and 
+  swap tokens.
 - In this version, you only use in testnet
 
 ## Prerequisites
@@ -58,7 +59,11 @@ This option allows you to interact with your wallet
 - This option allows you to withdraw money from your wallet
 - You need to enter the token symbol, amount and the receiver address to withdraw.
 
-#### 1.5. Go back
+#### 1.5 Change password
+- This option allows you to set or change your password
+- After that, you need to enter your password to confirm when you want to create a transaction
+
+#### 1.6. Go back
 - This option allows you to go back to the main menu
 
 ### 2. Market

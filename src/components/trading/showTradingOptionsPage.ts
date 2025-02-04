@@ -37,7 +37,7 @@ export async function showTradingOptionsPage(mainApp: MainApp, page: number = 0)
     console.log();
 
     console.log('Next option:');
-    console.log('1 - Enter trading pair');
+    console.log('1 - Enter pair to trading');
     console.log('2 - Add trading pair');
     console.log('3 - Remove trading pair');
     console.log('4 - Add token');

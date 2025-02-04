@@ -3,6 +3,7 @@ import {findTokenBySymbol} from "../../repository/token-repository";
 import {getAssets, getFee, isValidAddress} from "../../common/ultis";
 import {submitTx} from "../../../hello-world/common";
 import {showWalletOptionsPage} from "./showWalletOptionsPage";
+import {showSubmitTxWithPasswordPage} from "../showSubmitTxWithPasswordPage";
 
 export function showWithdrawPage(mainApp: MainApp) {
     console.log();
@@ -81,12 +82,7 @@ export function enterAmount(mainApp: MainApp, maxAmount: number, tokenSymbol: st
 export function confirmWithdraw(mainApp: MainApp, tx: any) {
     mainApp.getReadline().question(`Confirm?`, async (confirm) => {
         if (confirm === 'Y') {
-            await submitTx(tx, mainApp.getLucid());
-            console.log('Withdraw successfully');
-            console.log('Press any key to continue');
-            mainApp.getReadline().question(``, async () => {
-                showWithdrawPage(mainApp);
-            });
+            showSubmitTxWithPasswordPage(mainApp, tx, showWithdrawPage, mainApp);
         } else if (confirm === 'E') {
             showWithdrawPage(mainApp);
         } else {

@@ -2,7 +2,7 @@ import * as readline from 'readline';
 import {showMainMenuPage} from "./components/showMainMenuPage";
 import {LucidEvolution} from "@lucid-evolution/lucid";
 import {getKeyFrom} from "../hello-world/common";
-import {ADMIN_PUBLIC_KEY_HASH_PATH, PRIVATE_KEY_PATH} from "./common/types";
+import {ADMIN_PUBLIC_KEY_HASH_PATH, PASSWORD_PATH, PRIVATE_KEY_PATH} from "./common/types";
 import {getAssets} from "./common/ultis";
 import {getLucidOgmiosInstance} from "./providers/lucid-instance";
 import "reflect-metadata"
@@ -60,6 +60,10 @@ export class MainApp {
 
     public getDataSource() {
         return this.dataSource;
+    }
+
+    public getEncryptedPassword() {
+        return getKeyFrom(PASSWORD_PATH);
     }
 }
 
