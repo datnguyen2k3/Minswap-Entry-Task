@@ -1,4 +1,4 @@
-import {CML, toText, TxSignBuilder, UTxO} from "@lucid-evolution/lucid";
+import {CML, fromText, toText, TxSignBuilder, UTxO} from "@lucid-evolution/lucid";
 import {MainApp} from "../main";
 import sha256 from 'crypto-js/sha256';
 import hmacSHA512 from 'crypto-js/hmac-sha512';
@@ -9,6 +9,8 @@ import {Exchange} from "../../dex/src/dex/exchange";
 import {ADA_TO_LOVELACE, PASSWORD_PATH} from "./types";
 import {findPairByTokenSymbol} from "../repository/trading-pair-repository";
 import {saveKeyFrom} from "../../hello-world/common";
+import {Token} from "../entities/token";
+import {getExchangeValidator} from "../../dex/src/utils";
 
 export function parseFraction(fraction: string): number {
     const [numerator, denominator] = fraction.split('/').map(Number);
@@ -208,4 +210,32 @@ export function createEncryptedPassword(password: string, privateKey: string): s
 export function savePassword(password: string, privateKey: string) {
     const encryptedPassword = createEncryptedPassword(password, privateKey);
     saveKeyFrom(encryptedPassword, PASSWORD_PATH);
+}
+
+export function getAddedAdaByAddLiquidity(lpUTxO: UTxO, tokenAmount: number, tokenContractName: string): number {
+    const amount = Number(Exchange.getAddedAdaByAddedTradeToken(lpUTxO, BigInt(tokenAmount), tokenContractName));
+    return amount / ADA_TO_LOVELACE;
+}
+
+export function getLpContractName(token: Token, adminPublishKeyHash: string): string {
+    const validator = getExchangeValidator(adminPublishKeyHash, token.getAsset());
+    if (!token.tokenName) {
+        throw new Error('Token name not found');
+    }
+    return `${validator.policyId}${fromText(token.tokenName)}`
+}
+
+export function getLpTokenAmount(lpUTxO: UTxO, tokenAmount: number, adaAmount: number, tokenContractName: string): number {
+    return Number(Exchange.getLpTokenByAddedLiquidity(
+        lpUTxO,
+        BigInt(tokenAmount),
+        BigInt(adaAmount * ADA_TO_LOVELACE),
+        tokenContractName
+    ))
+}
+
+export function createAddLiquidityTx(lpUTxO: UTxO, mainApp: MainApp, token: Token, tokenAmount: number, adaAmount: number, lpAmount: number) {
+    const lovelaceAmount = BigInt(adaAmount * ADA_TO_LOVELACE);
+    const exchange = new Exchange(mainApp.getLucid(), mainApp.getPrivateKey(), mainApp.getAdminPublicKeyHash(), token.getAsset());
+    return exchange.createAddedLiquidityTx(lpUTxO, lovelaceAmount, BigInt(tokenAmount), BigInt(lpAmount));
 }
