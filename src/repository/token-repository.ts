@@ -1,5 +1,5 @@
 import { Token } from "../entities/token";
-import {DataSource} from "typeorm";
+import {DataSource, Not} from "typeorm";
 
 export async function saveToken(policyId: string, tokenName: string, tradeName: string, datasource: DataSource) {
     const token = new Token();
@@ -30,12 +30,15 @@ export async function findTokenByPolicyIdAndTokenName(policyId: string, tokenNam
     })
 }
 
-export async function getTokens(datasource: DataSource, page: number, perPage: number) {
+export async function getTradeTokens(datasource: DataSource, page: number, perPage: number) {
     const tokenRepository = datasource.getRepository(Token);
 
     return tokenRepository.find({
+        where: {
+            tokenName: Not('LP_TOKEN')
+        },
         skip: page * perPage,
-        take: perPage
+        take: perPage,
     })
 }
 

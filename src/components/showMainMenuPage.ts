@@ -2,7 +2,7 @@ import {MainApp} from "../main";
 import {showInvalidAnswer} from "./showInvalidAnswer";
 import {showWalletOptionsPage} from "./wallet/showWalletOptionsPage";
 import {showTradingOptionsPage} from "./trading/showTradingOptionsPage";
-import {showLiquidityOptions} from "./liquidity/showLiquidityOptions";
+import {showLiquidityOptionsPage} from "./liquidity/showLiquidityOptionsPage";
 
 export const MAIN_MENU =
 `
@@ -36,7 +36,7 @@ export function showMainMenuPage(mainApp: MainApp) {
                 showTradingOptionsPage(mainApp);
                 break;
             case LIQUIDITY_OPTIONS:
-                showLiquidityOptions(mainApp);
+                showLiquidityOptionsPage(mainApp);
                 break;
             case EXIT_OPTIONS:
                 mainApp.getReadline().close();

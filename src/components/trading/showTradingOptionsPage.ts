@@ -4,7 +4,7 @@ import {showAddPairPage} from "./showAddPairPage";
 import {showAddTokenPage} from "./showAddTokenPage";
 import {showMainMenuPage} from "../showMainMenuPage";
 import {showEnterPairPage} from "./exchange/showEnterPairPage";
-import {getTokens, getTokenTotalPage} from "../../repository/token-repository";
+import {getTradeTokens, getTokenTotalPage} from "../../repository/token-repository";
 import {getPrice} from "../../common/ultis";
 
 const ENTER_TRADING_PAIR = '1';
@@ -21,7 +21,7 @@ const PER_PAGE = 10;
 export async function showTradingOptionsPage(mainApp: MainApp, page: number = 0) {
     console.log();
     console.log('Market today:');
-    const tokens = await getTokens(mainApp.getDataSource(), 0, 10);
+    const tokens = await getTradeTokens(mainApp.getDataSource(), 0, 10);
     for (let i = 0; i < tokens.length; i++) {
         const orderIndex = i + 1 + page * PER_PAGE;
         const symbol = tokens[i].tradeName;

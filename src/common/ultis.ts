@@ -4,7 +4,7 @@ import sha256 from 'crypto-js/sha256';
 import hmacSHA512 from 'crypto-js/hmac-sha512';
 import Base64 from 'crypto-js/enc-base64';
 
-import {findTokenByPolicyIdAndTokenName, findTokenBySymbol} from "../repository/token-repository";
+import {findTokenByPolicyIdAndTokenName, findTokenBySymbol, saveToken} from "../repository/token-repository";
 import {Exchange} from "../../dex/src/dex/exchange";
 import {ADA_TO_LOVELACE, PASSWORD_PATH} from "./types";
 import {findPairByTokenSymbol} from "../repository/trading-pair-repository";
@@ -238,4 +238,12 @@ export function createAddLiquidityTx(lpUTxO: UTxO, mainApp: MainApp, token: Toke
     const lovelaceAmount = BigInt(adaAmount * ADA_TO_LOVELACE);
     const exchange = new Exchange(mainApp.getLucid(), mainApp.getPrivateKey(), mainApp.getAdminPublicKeyHash(), token.getAsset());
     return exchange.createAddedLiquidityTx(lpUTxO, lovelaceAmount, BigInt(tokenAmount), BigInt(lpAmount));
+}
+
+export function saveLpToken(token: Token, mainApp: MainApp) {
+    const tradeName = `${token.tradeName}-ADA`;
+    const validator = getExchangeValidator(mainApp.getAdminPublicKeyHash(), token.getAsset());
+    const policyId = validator.policyId;
+    const tokenName = 'LP_TOKEN';
+    return saveToken(policyId, tokenName, tradeName, mainApp.getDataSource());
 }

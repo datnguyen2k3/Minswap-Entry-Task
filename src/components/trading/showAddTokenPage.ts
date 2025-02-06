@@ -1,7 +1,7 @@
 import {MainApp} from "../../main";
 import {showTradingOptionsPage} from "./showTradingOptionsPage";
 import {showInvalidAnswer} from "../showInvalidAnswer";
-import {isValidPolicyId} from "../../common/ultis";
+import {isValidPolicyId, saveLpToken} from "../../common/ultis";
 import {findTokenByPolicyIdAndTokenName, saveToken} from "../../repository/token-repository";
 
 export function showAddTokenPage(mainApp: MainApp) {
@@ -51,7 +51,8 @@ function enterTokenSymbol(resultPolicyId: string, resultTokenName: string, mainA
             showInvalidAnswer();
             enterTokenSymbol(resultPolicyId, resultTokenName, mainApp);
         } else {
-            await saveToken(resultPolicyId, resultTokenName, tokenSymbol, mainApp.getDataSource());
+            const token = await saveToken(resultPolicyId, resultTokenName, tokenSymbol, mainApp.getDataSource());
+            await saveLpToken(token, mainApp);
             console.log('Token added successfully');
             console.log();
             console.log('Press any key to go back');
