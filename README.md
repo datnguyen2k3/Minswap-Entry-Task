@@ -118,8 +118,29 @@ When you choose this option, you will see a price of many tokens with the follow
 - This option allows you to go to the previous page of the token list
 
 #### 2.8. Go back
+- This option allows you to go back to the main menu
 
-### 3. Liquidity (under development)
+### 3. Liquidity
+
+- When you choose this option, you need to enter a token symbol that you want to interact with liquidity pool.
+- After that, you will see the pool information and following options below
+
+#### 3.1. Add liquidity
+- This option allows you to add liquidity to the pool
+- You need to enter the amount of token to add to the pool
+- Make sure you have enough token and ADA to add to the pool
+- After that, you will see the received LP token and the fee you need to pay
+- Finally, you can confirm the transaction and you will see the transaction hash
+
+#### 3.2. Remove liquidity
+- This option allows you to remove liquidity from the pool
+- You need to enter the amount of LP token to remove from the pool
+- Make sure you have enough LP token to remove from the pool
+- After that, you will see the received token, ADA and the fee you need to pay
+- Finally, you can confirm the transaction and you will see the transaction hash
+
+#### 3.3. Go back
+- This option allows you to go back to the liquidity menu
 
 ### 4. Exit
 - This option allows you to exit the app
