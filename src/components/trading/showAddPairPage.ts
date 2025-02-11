@@ -2,7 +2,7 @@ import {MainApp} from "../../main";
 import {showTradingOptionsPage} from "./showTradingOptionsPage";
 import {showInvalidAnswer} from "../showInvalidAnswer";
 import {findTokenBySymbol} from "../../repository/token-repository";
-import {addPair, saveTradingPair} from "../../repository/trading-pair-repository";
+import {addPair, findPairByTokenSymbol, saveTradingPair} from "../../repository/trading-pair-repository";
 
 export function showAddPairPage(mainApp: MainApp) {
     console.log();
@@ -44,17 +44,23 @@ function enterTradeToken2(resultTradeToken1: string, mainApp: MainApp) {
             console.log('Token 2 must be different from token 1');
             enterTradeToken2(resultTradeToken1, mainApp);
             return;
-        } else if (tradeToken2 === 'ADA') {
-            await addPair(resultTradeToken1, tradeToken2, mainApp.getDataSource());
-        } else {
+        } else if (tradeToken2 !== 'ADA') {
             const token2 = await findTokenBySymbol(tradeToken2, mainApp.getDataSource());
             if (!token2) {
                 console.log('Token not found, please try again');
-                enterTradeToken2(resultTradeToken1, mainApp);
+                enterTradeToken1(mainApp);
+                return;
             }
-            await addPair(resultTradeToken1, tradeToken2, mainApp.getDataSource());
         }
 
+        const pair = await findPairByTokenSymbol(resultTradeToken1, tradeToken2, mainApp.getDataSource());
+        if (pair) {
+            console.log('Trading pair already exists, please try again');
+            enterTradeToken1(mainApp);
+            return;
+        }
+
+        await addPair(resultTradeToken1, tradeToken2, mainApp.getDataSource());
         console.log('Trading pair added successfully');
 
         console.log('Press any key to go back');
