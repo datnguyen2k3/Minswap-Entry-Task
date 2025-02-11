@@ -14,23 +14,23 @@
 
 1. Clone the repository
 ```bash
-    git clone https://github.com/datnguyen2k3/Minswap-Entry-Task.git
-    cd Minswap-Entry-Task
+  git clone https://github.com/datnguyen2k3/simple-wallet.git
+  cd simple-wallet
 ```
 
 2. Install pnpm
 ```bash
-    npm install -g pnpm
+  npm install -g pnpm
 ```
 
 3. Install dependencies
 ```bash
-    pnpm install
+  pnpm install
 ```
 
 4. Start the app
 ```bash
-    pnpm start
+  pnpm start
 ```
 
 ## Usage
